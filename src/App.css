@@ -1,0 +1,66 @@
+.App {
+  text-align: center;
+}
+
+h3 {
+  text-align: left;
+  padding: 0;
+  margin:2px;
+  font-style: italic;
+  color:#333;
+}
+
+
+
+.App-logo {
+  animation: App-logo-spin infinite 20s linear;
+  height: 80px;
+}
+
+.App-header {
+  background-color: #222;
+  height: 150px;
+  padding: 20px;
+  color: white;
+}
+
+.App-intro {
+  font-size: large;
+}
+
+@keyframes App-logo-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.graph-container
+{
+  width:100%;
+  height:100%;
+}
+
+.control-block {
+  position: absolute;
+  top:0;
+  left:0;
+}
+
+.vis-tooltip {
+  position: absolute;
+  display: block;
+  border: 1px solid #666;
+  background: white;
+  text-align: left;
+  padding:3px;
+}
+.vis-tooltip p {
+  margin:0;
+  padding:0;
+}
+
+.legend p {
+  text-align: left;
+  padding: 0;
+  margin:5px 0;
+}
+

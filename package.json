@@ -1,0 +1,36 @@
+{
+  "name": "sim-client",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.2.0",
+    "react-scripts": "0.7.0",
+    "remote-redux-devtools": "^0.5.0",
+    "chai-immutable": "^1.6.0"
+  },
+  "dependencies": {
+    "d3": "^3.5.17",
+    "fixed-data-table": "^0.6.3",
+    "graphlib": "^2.1.1",
+    "immutable": "3.8.1",
+    "json2csv": "^3.7.3",
+    "random-seed": "^0.3.0",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2",
+    "react-graph-vis": "^0.1.1",
+    "react-redux": "^5.0.3",
+    "react-sigma": "^1.2.17",
+    "react-vis-force": "^0.1.4",
+    "redux": "^3.6.0",
+    "redux-thunk": "^2.2.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "test2": "react-scripts test",
+    "eject": "react-scripts eject",
+    "test-win": "mocha --compilers js:babel-core/register --require ./test/test_helper.js --recursive"
+  }
+}
