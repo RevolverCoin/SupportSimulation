@@ -16,8 +16,7 @@ export const INITIAL_STATE = fromJS({
 function createNode(count, baseId, nodeType, createParams) {
     return Range(0, count).map(index => Map({
         id: baseId + index,
-        //label: `${nodeType}_${baseId + index}`,
-        label: `${nodeType[0]}${baseId + index}`,
+        //label: `${nodeType[0]}${baseId + index}`,
         type: nodeType,
         title: "",
         shape: "circle",
@@ -67,6 +66,7 @@ export function createGenerator(state, count) {
         .update('lastNodeId', id => id + count)
         .update('nodes', n => n.concat(createNode(count, nodeId, NodeType.GENERATOR,
             (index) => ({
+                //label: `r${nodeId + index}`,
                 posBalance: getRandomInt(0, 100),
                 color: "#fdc689",
                 mass: 1,
@@ -264,8 +264,10 @@ export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
                     const nodeId = `${node.get('id')}_${authorId}`
                     return Map({
                         id: nodeId,
+                        arrows: {to: {enabled: false}},
                         source: node.get('id'),
                         target: authorId,
+                        width: 3,
                         label: "supports",
                         age: getRandomInt(tMin, tMax)
                     })

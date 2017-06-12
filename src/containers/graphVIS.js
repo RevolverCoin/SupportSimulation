@@ -15,10 +15,12 @@ function prepareNodeData(nodes) {
 }
 
 function prepareEdgesData(nodes) {
-    return nodes && nodes.toJS().map(({id, source, target})=>({
+    return nodes && nodes.toJS().map(({id, source, target, arrows})=>({
             id,
             from:source,
-            to:target
+            to:target,
+            arrows,
+            color: 'rgb(200,200,200)'
         }))
 }
 

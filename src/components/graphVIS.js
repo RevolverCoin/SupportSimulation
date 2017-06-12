@@ -50,19 +50,19 @@ let options = {
 let optionsStabilized = {
 
     "physics": {
-        // "barnesHut": {
-        //     "gravitationalConstant": -10750,
-        //     "centralGravity": 0.45
-        // },
-        // "maxVelocity": 166,
-        // "minVelocity": 100,
-        // "timestep": 0.5,
-        //
-        // stabilization:{
-        //
-        //     iterations:1,
-        //     fit: true
-        // },
+    //     "barnesHut": {
+    //         "gravitationalConstant": -10750,
+    //         "centralGravity": 0.45
+    //     },
+    //     "maxVelocity": 166,
+    //     "minVelocity": 100,
+    //     "timestep": 0.5,
+    //
+    //     stabilization:{
+    //
+    //         iterations:1,
+    //         fit: true
+    //     },
         enabled: false,
         repulsion: {
             centralGravity: 0.2,
@@ -75,12 +75,10 @@ let optionsStabilized = {
         // stabilization:
         // {
         //     iterations: 500,
-        //
         // }
-
     },
     layout: {
-        randomSeed: 0
+        //randomSeed: 0
     },
 };
 
@@ -109,17 +107,17 @@ class GraphImpl extends Component{
         window.addEventListener('resize', this.updateWindowDimensions.bind(this));
 
         this.stabilize();
-        console.log("Update: " + Math.random());
+
     }
 
     componentWillUnmount() {
         window.removeEventListener('resize', this.updateWindowDimensions.bind(this));
-        console.log("Update: " + Math.random());
+
     }
 
     updateWindowDimensions() {
         this.setState({ width: window.innerWidth, height: window.innerHeight });
-        console.log("Update: " + Math.random());
+
     }
 
     stabilize()
