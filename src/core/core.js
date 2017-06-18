@@ -35,6 +35,7 @@ function createNode(count, baseId, nodeType, createParams) {
 
 }
 
+
 export function resetState(state) {
     return INITIAL_STATE.set('statistics',  state.get('statistics'))
 }

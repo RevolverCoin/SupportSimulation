@@ -67,15 +67,18 @@ class App extends Component {
         store.dispatch(restart());
 
         store.dispatch(createSimulation({
-            magMin: 3,
-            magMax: 5,
-            magStep: 1,
+            magMin: 30,
+            magMax: 60,
+            magStep: 5,
             densMin: 0.1,
-            densMax: 0.4,
-            densStep: 0.1
+            densMax: 0.2,
+            densStep: 0.1,
+            supToGenActivity:1,
+            pGen:0.3,
+            pAuth:0.2,
+            pSup:0.5,
         }));
 
-        store.dispatch(updatePOSBlockProbs())
 
         this.setState({graphKey: this.state.graphKey + 1});
     }

@@ -33,7 +33,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
     const authorsReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
         const isTerminalNode = isTerminal(nodeId, updatedMatrix)
-        const fee =  (getNodeType(nodeId) === NodeType.AUTHOR ? 0.8 : 0.01)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.8 : 0.01)
         return reward * fee
     })
 
@@ -44,7 +44,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
     const outputReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
         const isTerminalNode = isTerminal(nodeId, updatedMatrix)
-        const fee =  (getNodeType(nodeId) === NodeType.AUTHOR ? 0.8 : 0.01)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.8 : 0.01)
         return reward * (1 - fee)
     })
 
@@ -62,29 +62,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
     }
 }
 
-function rewardAuthors({node, matrix, inputReward, height, getPopularity, getSupportAge, fee}) {
-    // const getWeights = (authors) => authors.map(nodeId => {
-    //     const age = (height - getSupportAge(nodeId)) / height;
-    //     return getPopularity(nodeId) * age
-    // });
-
-
-    const getWeights = (nodes) => nodes.map(nodeId =>
-        1 / nodes.size
-    );
-
-    return rewardNodes({node, matrix, inputReward, height, getWeights, fee})
-}
-
-function rewardUsers({node, matrix, inputReward, height, fee}) {
-    const getWeights = (nodes) => nodes.map(nodeId =>
-        1 / nodes.size
-    );
-    return rewardNodes({node, matrix, inputReward, height, getWeights, fee})
-}
-
-
-function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee, supporterFee) {
+function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee, supporterFee, waveIndex, minDistToGenerator) {
     //reward during this round
     let curMatrix = matrix;
 
@@ -92,12 +70,15 @@ function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee
             if (getNodeType(nodeId) === NodeType.AUTHOR) {
                 return getAdjacentNodes(nodeId, matrix).size;
             }
-
             return 1 / nodes.size
         }
     );
 
+    //min distance to generator equals to current wave index since wave starts at the generator
+    const updatedMinDistToGen = nodes.reduce((acc, next) => acc.set(next, waveIndex), minDistToGenerator)
+
     const roundReward = nodes.map(n => {
+
         const result = rewardNodes({
             node: n,
             matrix: curMatrix,
@@ -107,7 +88,6 @@ function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee
             getNodeType
         });
         curMatrix = result.matrix;
-
         return result
     });
 
@@ -135,16 +115,16 @@ function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee
 
     const terminalNodesReward = terminalNodesIndices.reduce((acc, id) => acc.delete(id), roundOutputReward);
 
-   // mergedReward = mergedReward.mergeWith((a, b) => a + b, terminalNodesReward)
+    // mergedReward = mergedReward.mergeWith((a, b) => a + b, terminalNodesReward)
 
     const processedNodes = roundReward.map(r => r.outputRewardMap.keySeq()).flatten().toSet().toList();
     //we have more nodes to process
     if (processedNodes.size) {
-        return processNodes(processedNodes, curMatrix, mergedInputReward, mergedReward, getNodeType, authorFee, supporterFee)
+        return processNodes(processedNodes, curMatrix, mergedInputReward, mergedReward, getNodeType, authorFee, supporterFee, ++waveIndex, updatedMinDistToGen)
     }
 
 
-    return mergedReward
+    return {mergedReward, minDistToGenerator: updatedMinDistToGen}
 }
 
 
@@ -152,12 +132,14 @@ export function distributeReward(state, block, getNodeType, authorFee, supporter
     const finder = block.get("finderId");
     const matrix = createAdjacencyMatrix(state.get("edges"));
     const inputReward = Map().set(finder, block.get("subsidy"));
-    const mergedReward = processNodes(List.of(finder), matrix, inputReward, Map(), getNodeType, authorFee, supporterFee)
+    const {mergedReward, minDistToGenerator} = processNodes(List.of(finder), matrix, inputReward, Map(), getNodeType, authorFee, supporterFee, 0, Map())
 
 
-    return state.update("nodes", nodes => nodes.map(n => {
-        const hasRewardUpdate = mergedReward.has(n.get('id'));
-        return hasRewardUpdate ? n.update("reward", 0, r => r + mergedReward.get(n.get('id'))) : n
-    }));
+    return state
+        .set("minDistToGenerator", minDistToGenerator)
+        .update("nodes", nodes => nodes.map(n => {
+            const hasRewardUpdate = mergedReward.has(n.get('id'));
+            return hasRewardUpdate ? n.update("reward", 0, r => r + mergedReward.get(n.get('id'))) : n
+        }));
     //   .update ("nodes", nodes=>nodes.map(n=>n.update("label","",l=>''+n.get("reward"))))
 }

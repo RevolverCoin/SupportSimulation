@@ -3,7 +3,7 @@ import {getGenerators, getSupporters, INITIAL_STATE, getNodeOfType} from "../cor
 import {Range} from 'immutable'
 import * as NodeType from "../constants/NodeType";
 
-import {dumpState} from '../core/statistics'
+import {dumpState,postProcess, dumpCSV} from '../core/statistics'
 
 export function createAuthor(count) {
     return {
@@ -44,11 +44,11 @@ export function resetState() {
     }
 }
 
-export function addStatistics() {
+export function addStatistics(mag, dens) {
     return (dispatch, getState) => {
         dispatch({
             type: types.ADD_STATISTICS_RAW,
-            data: getState()
+            data: {state:getState(), mag, dens}
         })
     }
 }
@@ -73,7 +73,22 @@ export function computeStatistics() {
     }
 }
 
-export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, numBlocks}) {
+/**
+ *
+ * @param magMin - magnitude min
+ * @param magMax - magnitude max
+ * @param magStep - magnitude step
+ * @param densMin - density min
+ * @param densMax - density max
+ * @param densStep - density step
+ * @param supToGenActivity - relative supporter activity compared to generator activity
+ * @param pGen - percentage\part of generator nodes
+ * @param pAuth - percentage\part of author nodes
+ * @param pSup - percentage\part of supported nodes
+ * sum of pGen + pAuth + pSup must be equal to 1
+ * @returns {function(*=, *=)}
+ */
+export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup},) {
     return (dispatch, getState) => {
         const magRange = Range(magMin, magMax, magStep);
         const densRange = Range(densMin, densMax, densStep)
@@ -85,10 +100,13 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
             densRange.forEach(dens => {
 
                 console.log(`Starting round ${++round} mag:${mag}, dens:${dens}`)
-                const genCount = mag / 3;
-                const authCount = mag / 3;
-                const supCount = mag / 3;
+                const genCount = mag * pGen;
+                const authCount = mag * pAuth;
+                const supCount = mag * pSup;
 
+
+                const avgGenSupport = 0.5 * dens * (mag - 1) / (pGen + supToGenActivity * pSup )
+                const avgSupSupport = avgGenSupport * supToGenActivity
 
                 dispatch(createGenerator(genCount))
                 dispatch(createAuthor(authCount))
@@ -96,8 +114,8 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
 
                 dispatch(updateAuthorsSupportProb())
-                dispatch(establishSupportFromGenerators())
-                dispatch(establishSupportFromSupporters())
+                dispatch(establishSupportFromGenerators({sMin: 0, sMax: 2 * avgGenSupport}))
+                dispatch(establishSupportFromSupporters({sMin: 0, sMax: 2 * avgSupSupport}))
 
                 const generators = getNodeOfType(getState(), NodeType.GENERATOR)
 
@@ -106,7 +124,7 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
                 })
 
 
-                dispatch(addStatistics())
+                dispatch(addStatistics(mag, dens))
                 console.log(`added statistics for round ${round}`)
                 dispatch(resetState())
             })
@@ -114,6 +132,15 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
 
         dispatch(computeStatistics())
+
+     //   console.log("Statistics:", dumpCSV(getState()))
+        const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
+
+
+        console.log(postProcessedData)
+        console.log(postProcessedData.avgAuthorsRewardList,dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount))
+       // console.log(dumpCSV(postProcessedData.avgGeneratorsRewardList))
+       // console.log(dumpCSV(postProcessedData.avgSupportersRewardList))
     }
 }
 
@@ -137,15 +164,15 @@ export function updateStructure() {
     }
 }
 
-export function establishSupportFromGenerators() {
+export function establishSupportFromGenerators({sMinx = 1, sMax = 8}) {
     return (dispatch, getState) => {
-        dispatch(establishSupport(getGenerators(getState()), 1, 8, 1, 100))
+        dispatch(establishSupport(getGenerators(getState()), sMinx, sMax, 1, 100))
     }
 }
 
-export function establishSupportFromSupporters() {
+export function establishSupportFromSupporters({sMinx = 1, sMax = 6}) {
     return (dispatch, getState) => {
-        dispatch(establishSupport(getSupporters(getState()), 1, 6, 1, 100))
+        dispatch(establishSupport(getSupporters(getState()), sMinx, sMax, 1, 100))
     }
 }
 

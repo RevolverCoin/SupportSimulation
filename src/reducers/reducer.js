@@ -41,7 +41,7 @@ export default (state = INITIAL_STATE, action) => {
             return statistics.clearStatistics(state)
 
         case actions.ADD_STATISTICS_RAW:
-            return statistics.addStatisticsRaw(state, action.data)
+            return statistics.addStatisticsRaw(state, action.data.state, action.data.mag, action.data.dens)
 
         case actions.COMPUTE_STATISTICS:
             return statistics.computeStatistics(state)
