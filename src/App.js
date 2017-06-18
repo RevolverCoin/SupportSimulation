@@ -93,8 +93,8 @@ class App extends Component {
 
 
         store.dispatch(updateAuthorsSupportProb())
-        store.dispatch(establishSupportFromGenerators())
-        store.dispatch(establishSupportFromSupporters())
+        store.dispatch(establishSupportFromGenerators({sMinx : 1, sMax : 8}))
+        store.dispatch(establishSupportFromSupporters({sMinx : 1, sMax : 6}))
 
 
         store.dispatch(updatePOSBlockProbs())
