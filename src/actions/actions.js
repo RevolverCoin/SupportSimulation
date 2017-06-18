@@ -108,9 +108,9 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
                 const avgGenSupport = 0.5 * dens * (mag - 1) / (pGen + supToGenActivity * pSup )
                 const avgSupSupport = avgGenSupport * supToGenActivity
 
-                dispatch(createGenerator(genCount))
-                dispatch(createAuthor(authCount))
-                dispatch(createSupporter(supCount))
+                dispatch(createGenerator(Math.floor(genCount)))
+                dispatch(createAuthor(Math.floor(authCount)))
+                dispatch(createSupporter(Math.floor(supCount)))
 
 
                 dispatch(updateAuthorsSupportProb())
