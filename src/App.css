@@ -64,3 +64,25 @@ h3 {
   margin:5px 0;
 }
 
+
+.start-simulation-modal{
+  width: 400px;
+  height: 450px;
+  background-color: antiquewhite;
+  margin: 20px auto;
+  padding: 30px;
+}
+
+.start-simulation-modal label{
+  display: block;
+  margin-bottom: 10px;
+}
+
+.start-simulation-modal label span{
+  float: left;
+  width: 140px;
+}
+
+.start-simulation-modal button{
+  margin-top: 10px;
+}

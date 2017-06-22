@@ -49,6 +49,9 @@ export default (state = INITIAL_STATE, action) => {
         case actions.UPDATE_STRUCTURE:
             return core.updateStructure(state);
 
+        case actions.SET_CREATE_SIMULATION_POPUP_OPEN:
+            return state.set('isCreateSimulationModalOpen', action.data)
+
         default:
             return state;
     }

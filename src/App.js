@@ -6,8 +6,7 @@ import graphData from './data/data'
 
 import "./App.css";
 import Graph from "./containers/graphVIS";
-import StatTable from "./containers/statTable";
-import BlockTable from "./containers/blockTable";
+import StartSimulationModal from "./containers/StartSimulationModal";
 import configureStore from "./core/store";
 
 
@@ -21,7 +20,8 @@ import {createAuthor,
     updatePOSBlockProbs,
     updateStructure,
     createSimulation,
-    restart
+    restart,
+    setCreateSimulationPopupOpen
 } from "./actions/actions";
 
 
@@ -64,23 +64,24 @@ class App extends Component {
 
     onLaunchSimulation ()
     {
-        store.dispatch(restart());
+         store.dispatch(restart());
 
-        store.dispatch(createSimulation({
-            magMin: 30,
-            magMax: 60,
-            magStep: 5,
-            densMin: 0.1,
-            densMax: 0.2,
-            densStep: 0.1,
-            supToGenActivity:1,
-            pGen:0.3,
-            pAuth:0.2,
-            pSup:0.5,
-        }));
+         store.dispatch(createSimulation({
+         magMin: 45,
+         magMax: 50,
+         magStep: 5,
+         densMin: 0.1,
+         densMax: 0.2,
+         densStep: 0.1,
+         supToGenActivity:1,
+         pGen:0.3,
+         pAuth:0.2,
+         pSup:0.5,
+         }));
 
 
-        this.setState({graphKey: this.state.graphKey + 1});
+
+        store.dispatch(setCreateSimulationPopupOpen(true))
     }
 
     onBuildGraph()
@@ -180,6 +181,8 @@ class App extends Component {
                             <p>Winner: {id} </p>
 
                         </div>
+
+                        <StartSimulationModal/>
 
                     </div>
 

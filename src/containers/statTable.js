@@ -46,6 +46,8 @@ function createStatistics(nodes, edges, blocks) {
             .sortBy(n => -n.get('reward'))
             .toJS()
 }
+
+
 function mapStateToProps(state) {
     const data = createStatistics(state.get('nodes'), state.get('edges'), state.get('blocks'));
     dump(data)

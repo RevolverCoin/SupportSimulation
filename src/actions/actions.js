@@ -3,7 +3,7 @@ import {getGenerators, getSupporters, INITIAL_STATE, getNodeOfType} from "../cor
 import {Range} from 'immutable'
 import * as NodeType from "../constants/NodeType";
 
-import {dumpState,postProcess, dumpCSV} from '../core/statistics'
+import {dumpState, postProcess, dumpCSV} from '../core/statistics'
 
 export function createAuthor(count) {
     return {
@@ -48,7 +48,7 @@ export function addStatistics(mag, dens) {
     return (dispatch, getState) => {
         dispatch({
             type: types.ADD_STATISTICS_RAW,
-            data: {state:getState(), mag, dens}
+            data: {state: getState(), mag, dens}
         })
     }
 }
@@ -133,14 +133,14 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
         dispatch(computeStatistics())
 
-     //   console.log("Statistics:", dumpCSV(getState()))
+        //   console.log("Statistics:", dumpCSV(getState()))
         const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
 
 
         console.log(postProcessedData)
-        console.log(postProcessedData.avgAuthorsRewardList,dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount))
-       // console.log(dumpCSV(postProcessedData.avgGeneratorsRewardList))
-       // console.log(dumpCSV(postProcessedData.avgSupportersRewardList))
+        console.log(postProcessedData.avgAuthorsRewardList, dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount))
+        // console.log(dumpCSV(postProcessedData.avgGeneratorsRewardList))
+        // console.log(dumpCSV(postProcessedData.avgSupportersRewardList))
     }
 }
 
@@ -180,5 +180,12 @@ export function generatePOSBlock(count = 1, nodeId) {
     return {
         type: types.GENERATE_POS_BLOCK,
         data: {count, nodeId}
+    }
+}
+
+export function setCreateSimulationPopupOpen(value) {
+    return {
+        type: types.SET_CREATE_SIMULATION_POPUP_OPEN,
+        data: value
     }
 }
