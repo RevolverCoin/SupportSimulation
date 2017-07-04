@@ -1,5 +1,8 @@
 import {List, fromJS, Map, Range} from 'immutable'
 const json2csv = require('json2csv');
+import downloadCsv from 'download-csv';
+
+
 import {getNodeOfType} from './core'
 import {createAdjacencyMatrix, getAdjacentNodes} from './utils'
 import * as NodeType from "../constants/NodeType";
@@ -14,16 +17,17 @@ export function addStatisticsRaw(state, data, mag, dens) {
 }
 
 export function computeStatistics(state) {
-    const getNodesAvgReward = (matrix, nodes) => {
+    const getNodesAvgReward = (matrix, nodes, totalReward) => {
         //calculate rewards for each node of specified degree
         const avg = nodes.reduce((acc, next) => {
             const adjCount = getAdjacentNodes(next.get('id'), matrix).size
-            console.log("reward", next.toJS(), next.get('reward'))
-            return acc.update(adjCount, List(), l => l.push(next.get('reward') || 0))
+            const reward = (next.get('reward') || 0 ) / totalReward
+
+            return acc.update(adjCount, List(), l => l.push(reward))
         }, Map())
 
 
-        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / list.size
+        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / totalReward * list.size
 
         return avg.keySeq().reduce((acc, next) => {
             return acc.set(next, getAvg(avg.get(next)))
@@ -39,18 +43,22 @@ export function computeStatistics(state) {
             const dens = entry.get('dens')
             const stateSnapshot = entry.get('data')
 
+            const roundDistributedReward = stateSnapshot.get('nodes').reduce((acc, next) => acc + (next.get('reward') || 0), 0)
+
+
             const matrix = createAdjacencyMatrix(stateSnapshot.get('edges'))
 
             const authors = getNodeOfType(stateSnapshot, NodeType.AUTHOR)
             const supporters = getNodeOfType(stateSnapshot, NodeType.SUPPORTER)
             const generators = getNodeOfType(stateSnapshot, NodeType.GENERATOR)
 
+
             return acc.update(wave++, Map(), val => val
                 .set('mag', mag)
                 .set('dens', dens)
-                .set('avgAuthorsRewardList', getNodesAvgReward(matrix, authors))
-                .set('avgSupportersRewardList', getNodesAvgReward(matrix, supporters))
-                .set('avgGeneratorsRewardList', Map(), getNodesAvgReward(matrix, generators))
+                .set('avgAuthorsRewardList', getNodesAvgReward(matrix, authors, roundDistributedReward))
+                .set('avgSupportersRewardList', getNodesAvgReward(matrix, supporters, roundDistributedReward))
+                .set('avgGeneratorsRewardList', getNodesAvgReward(matrix, generators, roundDistributedReward))
                 .set('minDistToGenerator', stateSnapshot.get('minDistToGenerator'))
             )
 
@@ -65,12 +73,15 @@ export function computeStatistics(state) {
 export function postProcess(statistics) {
 
     //max support count of all rounds
-    const maxSupportCount = statistics.reduce((acc, next) => {
-        return Math.max(acc,
-            next.get('avgAuthorsRewardList').keySeq().size,
-            next.get('avgSupportersRewardList').keySeq().size,
-            next.get('avgGeneratorsRewardList').keySeq().size)
-    }, 0)
+    const {maxSupportCount, totalReward} = statistics.reduce((acc, next) => {
+        return {
+            maxSupportCount: Math.max(acc.maxSupportCount,
+                next.get('avgAuthorsRewardList').keySeq().sort().last() || 0,
+                next.get('avgSupportersRewardList').keySeq().sort().last() || 0,
+                next.get('avgGeneratorsRewardList').keySeq().sort().last() || 0),
+            totalReward: acc.maxSupportCount + next.get('roundDistributedReward')
+        }
+    }, {maxSupportCount: 0})
 
 
     const createRewardRow = (stats, list) => {
@@ -106,7 +117,7 @@ export function postProcess(statistics) {
     }, {maxSupportCount, avgAuthorsRewardList: [], avgGeneratorsRewardList: [], avgSupportersRewardList: []})
 }
 
-export function dumpCSV(data, maxSupportCount = 1) {
+export function dumpCSV(data, maxSupportCount = 1, exportFileName) {
 
     const supportIndexes = Range(0, maxSupportCount)
         .toJS()
@@ -115,8 +126,15 @@ export function dumpCSV(data, maxSupportCount = 1) {
     const fields = ['mag', 'dens', ...supportIndexes];
 
     try {
-        const result = json2csv({data, fields});
-        console.log(result);
+        if (exportFileName) {
+            downloadCsv(data, fields, exportFileName);
+        }
+        else {
+            const result = json2csv({data, fields});
+            console.log(result);
+
+        }
+
     } catch (err) {
         // Errors are thrown for bad options, or if the data is empty and no fields are provided.
         // Be sure to provide fields if it is possible that your data array will be empty.

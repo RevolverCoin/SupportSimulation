@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "d3": "^3.5.17",
+    "download-csv": "^1.1.1",
     "fixed-data-table": "^0.6.3",
     "graphlib": "^2.1.1",
     "immutable": "3.8.1",

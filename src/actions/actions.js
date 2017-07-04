@@ -138,9 +138,9 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
 
         console.log(postProcessedData)
-        console.log(postProcessedData.avgAuthorsRewardList, dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount))
-        // console.log(dumpCSV(postProcessedData.avgGeneratorsRewardList))
-        // console.log(dumpCSV(postProcessedData.avgSupportersRewardList))
+        console.log(postProcessedData.avgAuthorsRewardList, dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount,"authorsReward.csv"))
+        console.log(dumpCSV(postProcessedData.avgGeneratorsRewardList, postProcessedData.maxSupportCount))
+        console.log(dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount))
     }
 }
 
