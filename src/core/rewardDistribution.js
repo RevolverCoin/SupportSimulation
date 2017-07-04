@@ -62,7 +62,16 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
     }
 }
 
-function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee, supporterFee, waveIndex, minDistToGenerator) {
+function processNodes(nodes,
+                      matrix,
+                      inputReward,
+                      reward,
+                      getNodeType,
+                      authorFee,
+                      supporterFee,
+                      waveIndex,
+                      minDistToGenerator,
+                      useTerminalReward = false) {
     //reward during this round
     let curMatrix = matrix;
 
@@ -113,9 +122,12 @@ function processNodes(nodes, matrix, inputReward, reward, getNodeType, authorFee
         .keySeq()
         .filter(node => !isTerminal(node, curMatrix));
 
-    const terminalNodesReward = terminalNodesIndices.reduce((acc, id) => acc.delete(id), roundOutputReward);
 
-    // mergedReward = mergedReward.mergeWith((a, b) => a + b, terminalNodesReward)
+    if (useTerminalReward) {
+        const terminalNodesReward = terminalNodesIndices.reduce((acc, id) => acc.delete(id), roundOutputReward);
+        mergedReward = mergedReward.mergeWith((a, b) => a + b, terminalNodesReward)
+    }
+
 
     const processedNodes = roundReward.map(r => r.outputRewardMap.keySeq()).flatten().toSet().toList();
     //we have more nodes to process
