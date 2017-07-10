@@ -10,7 +10,8 @@ import StartSimulationModal from "./containers/StartSimulationModal";
 import configureStore from "./core/store";
 
 
-import {createAuthor,
+import {
+    createAuthor,
     createSupporter,
     createGenerator,
     generatePOSBlock,
@@ -28,11 +29,11 @@ import {createAuthor,
 const initialGraph = null; //graphData
 
 
-let  store;
-if (!initialGraph){
+let store;
+if (!initialGraph) {
     store = configureStore()
 }
-else{
+else {
     store = configureStore(initialGraph)
 }
 
@@ -41,51 +42,32 @@ class App extends Component {
 
     constructor(props) {
         super(props);
-        this.onGenBlock         = this.onGenBlock.bind(this);
+        this.onGenBlock = this.onGenBlock.bind(this);
         this.onLaunchSimulation = this.onLaunchSimulation.bind(this);
-        this.onBuildGraph       = this.onBuildGraph.bind(this);
-        this.onRunPOS           = this.onRunPOS.bind(this);
+        this.onBuildGraph = this.onBuildGraph.bind(this);
+        this.onRunPOS = this.onRunPOS.bind(this);
 
         this.state = {
-            graphKey : 0,
+            graphKey: 0,
             isPOSLaunched: false,
             isFirstLaunch: true,
             blockId: 0,
         }
     }
 
-    onGenBlock()
-    {
+    onGenBlock() {
         store.dispatch(generatePOSBlock(1));
         store.dispatch(updateStructure());
 
-        this.setState({blockId:this.state.blockId+1});
+        this.setState({blockId: this.state.blockId + 1});
     }
 
-    onLaunchSimulation ()
-    {
-         store.dispatch(restart());
-
-         store.dispatch(createSimulation({
-         magMin: 45,
-         magMax: 50,
-         magStep: 5,
-         densMin: 0.1,
-         densMax: 0.2,
-         densStep: 0.1,
-         supToGenActivity:1,
-         pGen:0.3,
-         pAuth:0.2,
-         pSup:0.5,
-         }));
-
-
-
+    onLaunchSimulation() {
+        store.dispatch(restart());
         store.dispatch(setCreateSimulationPopupOpen(true))
     }
 
-    onBuildGraph()
-    {
+    onBuildGraph() {
         store.dispatch(restart());
 
         store.dispatch(createAuthor(50))
@@ -94,8 +76,8 @@ class App extends Component {
 
 
         store.dispatch(updateAuthorsSupportProb())
-        store.dispatch(establishSupportFromGenerators({sMinx : 1, sMax : 8}))
-        store.dispatch(establishSupportFromSupporters({sMinx : 1, sMax : 6}))
+        store.dispatch(establishSupportFromGenerators({sMinx: 1, sMax: 8}))
+        store.dispatch(establishSupportFromSupporters({sMinx: 1, sMax: 6}))
 
 
         store.dispatch(updatePOSBlockProbs())
@@ -109,13 +91,11 @@ class App extends Component {
 
     }
 
-    setGraphImpl(impl)
-    {
+    setGraphImpl(impl) {
         this.graphImpl = impl;
     }
 
-    launchPOS(inst)
-    {
+    launchPOS(inst) {
         if (inst.state.isPOSLaunched) {
             inst.onGenBlock();
 
@@ -123,10 +103,9 @@ class App extends Component {
         }
     }
 
-    onRunPOS()
-    {
+    onRunPOS() {
         if (this.state.isPOSLaunched) {
-            this.setState({isPOSLaunched : false});
+            this.setState({isPOSLaunched: false});
             return;
         } else {
 
@@ -134,7 +113,7 @@ class App extends Component {
                 this.onBuildGraph();
             }
 
-            this.setState({isPOSLaunched : true, isFirstLaunch: false});
+            this.setState({isPOSLaunched: true, isFirstLaunch: false});
         }
 
         setTimeout(this.launchPOS, 100, this);
@@ -145,7 +124,7 @@ class App extends Component {
         const btnPOSCaption = (this.state.isPOSLaunched ? 'POS Pause...' : 'Run POS');
 
         const blocks = store && store.getState() ? store.getState().get('blocks') : null;
-        const id = blocks && blocks.last()? blocks.last().get('finderId') : 0;
+        const id = blocks && blocks.last() ? blocks.last().get('finderId') : 0;
 
         return (
             <Provider store={store}>
@@ -153,25 +132,25 @@ class App extends Component {
 
 
                     <div className="graph-container">
-                        <Graph parent={this} ref={ref=>this.graph=ref} key={this.state.graphKey} />
+                        <Graph parent={this} ref={ref => this.graph = ref} key={this.state.graphKey}/>
                     </div>
 
                     <div className="control-block">
                         <h3>XRE Simulation Launchpad</h3>
 
-                        <button  onClick={this.onGenBlock}>
+                        <button onClick={this.onGenBlock}>
                             Generate block
                         </button>
 
-                        <button  onClick={this.onBuildGraph}>
+                        <button onClick={this.onBuildGraph}>
                             Build graph
                         </button>
 
-                        <button  onClick={this.onRunPOS}>
+                        <button onClick={this.onRunPOS}>
                             {btnPOSCaption}
                         </button>
 
-                        <button  onClick={this.onLaunchSimulation}>
+                        <button onClick={this.onLaunchSimulation}>
                             Launch Sim
                         </button>
 
