@@ -44,11 +44,11 @@ export function resetState() {
     }
 }
 
-export function addStatistics(mag, dens) {
+export function addStatistics(round, mag, dens) {
     return (dispatch, getState) => {
         dispatch({
             type: types.ADD_STATISTICS_RAW,
-            data: {state: getState(), mag, dens}
+            data: {round, state: getState(), mag, dens}
         })
     }
 }
@@ -85,10 +85,11 @@ export function computeStatistics() {
  * @param pGen - percentage\part of generator nodes
  * @param pAuth - percentage\part of author nodes
  * @param pSup - percentage\part of supported nodes
+ * @param sampleSize - number of samples to use for each mag\dens
  * sum of pGen + pAuth + pSup must be equal to 1
  * @returns {function(*=, *=)}
  */
-export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup},) {
+export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, sampleSize = 3},) {
     return (dispatch, getState) => {
         const magRange = Range(magMin, magMax, magStep);
         const densRange = Range(densMin, densMax, densStep)
@@ -99,34 +100,38 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
         magRange.forEach(mag => {
             densRange.forEach(dens => {
 
-                console.log(`Starting round ${++round} mag:${mag}, dens:${dens}`)
-                const genCount = mag * pGen;
-                const authCount = mag * pAuth;
-                const supCount = mag * pSup;
+                for (let currentSample = 0; currentSample < sampleSize; ++currentSample) {
+                    console.log(`Starting round ${round} mag:${mag}, dens:${dens}, sample : ${currentSample}`)
+                    const genCount = mag * pGen;
+                    const authCount = mag * pAuth;
+                    const supCount = mag * pSup;
 
 
-                const avgGenSupport = 0.5 * dens * (mag - 1) / (pGen + supToGenActivity * pSup )
-                const avgSupSupport = avgGenSupport * supToGenActivity
+                    const avgGenSupport = 0.5 * dens * (mag - 1) / (pGen + supToGenActivity * pSup )
+                    const avgSupSupport = avgGenSupport * supToGenActivity
 
-                dispatch(createGenerator(Math.floor(genCount)))
-                dispatch(createAuthor(Math.floor(authCount)))
-                dispatch(createSupporter(Math.floor(supCount)))
-
-
-                dispatch(updateAuthorsSupportProb())
-                dispatch(establishSupportFromGenerators({sMin: 0, sMax: 2 * avgGenSupport}))
-                dispatch(establishSupportFromSupporters({sMin: 0, sMax: 2 * avgSupSupport}))
-
-                const generators = getNodeOfType(getState(), NodeType.GENERATOR)
-
-                generators.forEach(generator => {
-                    dispatch(generatePOSBlock(1, generator.get('id')))
-                })
+                    dispatch(createGenerator(Math.floor(genCount)))
+                    dispatch(createAuthor(Math.floor(authCount)))
+                    dispatch(createSupporter(Math.floor(supCount)))
 
 
-                dispatch(addStatistics(mag, dens))
-                console.log(`added statistics for round ${round}`)
-                dispatch(resetState())
+                    dispatch(updateAuthorsSupportProb())
+                    dispatch(establishSupportFromGenerators({sMin: 0, sMax: 2 * avgGenSupport}))
+                    dispatch(establishSupportFromSupporters({sMin: 0, sMax: 2 * avgSupSupport}))
+
+                    const generators = getNodeOfType(getState(), NodeType.GENERATOR)
+
+                    generators.forEach(generator => {
+                        dispatch(generatePOSBlock(1, generator.get('id')))
+                    })
+
+
+                    dispatch(addStatistics(round, mag, dens))
+                    console.log(`added statistics for round ${round}, sample : ${currentSample}`)
+                    dispatch(resetState())
+                }
+
+                ++round;
             })
         })
 
@@ -135,12 +140,10 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
         //   console.log("Statistics:", dumpCSV(getState()))
         const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
+        dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount, "authorsReward.csv")
+        dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount, "supportersReward.csv")
+        dumpCSV(postProcessedData.avgGeneratorsRewardList, postProcessedData.maxSupportCount, "generatorsReward.csv")
 
-
-        console.log(postProcessedData)
-        console.log(postProcessedData.avgAuthorsRewardList, dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount,"authorsReward.csv"))
-        console.log(dumpCSV(postProcessedData.avgGeneratorsRewardList, postProcessedData.maxSupportCount))
-        console.log(dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount))
     }
 }
 
