@@ -64,7 +64,12 @@ class App extends Component {
         this.setState({blockId: this.state.blockId + 1});
     }
     onShowCharts(){
-        store.dispatch(setChartsModalOpen(true))
+        if (store.getState().get('statistics')){
+            store.dispatch(setChartsModalOpen(true))
+        }
+        else{
+            alert('No simulation data available')
+        }
     }
 
     onLaunchSimulation() {
