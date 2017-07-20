@@ -5,7 +5,7 @@ import Modal from 'react-modal';
 import {connect} from 'react-redux';
 
 
-import {setCreateSimulationPopupOpen, createSimulation, restart} from '../actions/actions'
+import {setCreateSimulationModalOpen, createSimulation, restart} from '../actions/actions'
 
 const DEFAULT_STATE = {
     magMin: 45,
@@ -174,13 +174,13 @@ function mapStateToProps(state) {
 function mapDispatchToProps(dispatch) {
     return {
         onClose(params){
-            dispatch(setCreateSimulationPopupOpen(false))
+            dispatch(setCreateSimulationModalOpen(false))
             dispatch(restart());
             dispatch(createSimulation(params));
         },
 
         onCancel(){
-            dispatch(setCreateSimulationPopupOpen(false))
+            dispatch(setCreateSimulationModalOpen(false))
         }
     }
 }

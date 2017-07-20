@@ -41,7 +41,7 @@ export default (state = INITIAL_STATE, action) => {
             return statistics.clearStatistics(state)
 
         case actions.ADD_STATISTICS_RAW:
-            return statistics.addStatisticsRaw(state,action.data.round, action.data.state, action.data.mag, action.data.dens)
+            return statistics.addStatisticsRaw(state, action.data.round, action.data.state, action.data.mag, action.data.dens)
 
         case actions.COMPUTE_STATISTICS:
             return statistics.computeStatistics(state)
@@ -51,6 +51,9 @@ export default (state = INITIAL_STATE, action) => {
 
         case actions.SET_CREATE_SIMULATION_POPUP_OPEN:
             return state.set('isCreateSimulationModalOpen', action.data)
+
+        case actions.SET_CHARTS_POPUP_OPEN:
+            return state.set('isChartsModalOpen', action.data)
 
         default:
             return state;

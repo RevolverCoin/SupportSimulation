@@ -7,6 +7,7 @@ import graphData from './data/data'
 import "./App.css";
 import Graph from "./containers/graphVIS";
 import StartSimulationModal from "./containers/StartSimulationModal";
+import ChartsModal from "./containers/ChartsModal";
 import configureStore from "./core/store";
 
 
@@ -20,9 +21,9 @@ import {
     updateAuthorsSupportProb,
     updatePOSBlockProbs,
     updateStructure,
-    createSimulation,
+    setChartsModalOpen,
     restart,
-    setCreateSimulationPopupOpen
+    setCreateSimulationModalOpen
 } from "./actions/actions";
 
 
@@ -45,6 +46,7 @@ class App extends Component {
         this.onGenBlock = this.onGenBlock.bind(this);
         this.onLaunchSimulation = this.onLaunchSimulation.bind(this);
         this.onBuildGraph = this.onBuildGraph.bind(this);
+        this.onShowCharts = this.onShowCharts.bind(this);
         this.onRunPOS = this.onRunPOS.bind(this);
 
         this.state = {
@@ -61,10 +63,13 @@ class App extends Component {
 
         this.setState({blockId: this.state.blockId + 1});
     }
+    onShowCharts(){
+        store.dispatch(setChartsModalOpen(true))
+    }
 
     onLaunchSimulation() {
         store.dispatch(restart());
-        store.dispatch(setCreateSimulationPopupOpen(true))
+        store.dispatch(setCreateSimulationModalOpen(true))
     }
 
     onBuildGraph() {
@@ -154,6 +159,10 @@ class App extends Component {
                             Launch Sim
                         </button>
 
+                        <button onClick={this.onShowCharts}>
+                            Show charts
+                        </button>
+
                         <div className="legend">
                             <p>Block #: {this.state.blockId}</p>
                             <p>Total reward: {this.state.blockId * 10} </p>
@@ -162,6 +171,7 @@ class App extends Component {
                         </div>
 
                         <StartSimulationModal/>
+                        <ChartsModal/>
 
                     </div>
 

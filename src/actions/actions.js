@@ -89,7 +89,7 @@ export function computeStatistics() {
  * sum of pGen + pAuth + pSup must be equal to 1
  * @returns {function(*=, *=)}
  */
-export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, sampleSize = 3},) {
+export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, sampleSize = 3, downloadCSV = false},) {
     return (dispatch, getState) => {
         const magRange = Range(magMin, magMax, magStep);
         const densRange = Range(densMin, densMax, densStep)
@@ -138,12 +138,12 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
         dispatch(computeStatistics())
 
-        //   console.log("Statistics:", dumpCSV(getState()))
-        const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
-        dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount, "authorsReward.csv")
-        dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount, "supportersReward.csv")
-        dumpCSV(postProcessedData.avgGeneratorsRewardList, postProcessedData.maxSupportCount, "generatorsReward.csv")
-
+        if (downloadCSV){
+            const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
+            dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount, "authorsReward.csv")
+            dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount, "supportersReward.csv")
+            dumpCSV(postProcessedData.avgGeneratorsRewardList, postProcessedData.maxSupportCount, "generatorsReward.csv")
+        }
     }
 }
 
@@ -186,9 +186,16 @@ export function generatePOSBlock(count = 1, nodeId) {
     }
 }
 
-export function setCreateSimulationPopupOpen(value) {
+export function setCreateSimulationModalOpen(value) {
     return {
         type: types.SET_CREATE_SIMULATION_POPUP_OPEN,
+        data: value
+    }
+}
+
+export function setChartsModalOpen(value) {
+    return {
+        type: types.SET_CHARTS_POPUP_OPEN,
         data: value
     }
 }

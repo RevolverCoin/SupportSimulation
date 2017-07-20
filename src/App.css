@@ -64,6 +64,14 @@ h3 {
   margin:5px 0;
 }
 
+.charts-modal{
+  width: 800px;
+  height: 500px;
+  background-color: antiquewhite;
+  margin: 20px auto;
+  padding: 30px;
+}
+
 
 .start-simulation-modal{
   width: 400px;

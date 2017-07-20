@@ -17,6 +17,7 @@
     "immutable": "3.8.1",
     "json2csv": "^3.7.3",
     "random-seed": "^0.3.0",
+    "rd3": "^0.8.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-graph-vis": "^0.1.1",

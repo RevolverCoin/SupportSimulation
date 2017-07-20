@@ -32,7 +32,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
 
     const authorsReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
-        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.8 : 0.01)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.7 : 0.06)
         return reward * fee
     })
 
@@ -42,7 +42,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
 
     const outputReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
-        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.8 : 0.01)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.7 : 0.06)
         return reward * (1 - fee)
     })
 
