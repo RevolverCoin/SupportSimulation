@@ -23,7 +23,7 @@ export default (state = INITIAL_STATE, action) => {
             return core.updatePOSBlockProbability(state);
 
         case actions.GENERATE_POS_BLOCK:
-            return core.generatePOSBlock(state, action.data.count, 10, action.data.nodeId)
+            return core.generatePOSBlock(state, action.data.count, 10, action.data.nodeId, action.data.supporterFee, action.data.authorFee)
 
         case actions.ESTABLISH_SUPPORT :
             return core.establishSupport(state, action.data.nodes, action.data.sMin, action.data.sMax, action.data.tMin, action.data.tMax)

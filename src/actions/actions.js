@@ -89,7 +89,7 @@ export function computeStatistics() {
  * sum of pGen + pAuth + pSup must be equal to 1
  * @returns {function(*=, *=)}
  */
-export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, sampleSize = 3, downloadCSV = false},) {
+export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, supporterFee, authorFee, sampleSize = 3, downloadCSV = false},) {
     return (dispatch, getState) => {
         const magRange = Range(magMin, magMax, magStep);
         const densRange = Range(densMin, densMax, densStep)
@@ -122,7 +122,7 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
                     const generators = getNodeOfType(getState(), NodeType.GENERATOR)
 
                     generators.forEach(generator => {
-                        dispatch(generatePOSBlock(1, generator.get('id')))
+                        dispatch(generatePOSBlock(1, generator.get('id'),  supporterFee, authorFee))
                     })
 
 
@@ -179,10 +179,10 @@ export function establishSupportFromSupporters({sMinx = 1, sMax = 6}) {
     }
 }
 
-export function generatePOSBlock(count = 1, nodeId) {
+export function generatePOSBlock(count, nodeId, supporterFee, authorFee) {
     return {
         type: types.GENERATE_POS_BLOCK,
-        data: {count, nodeId}
+        data: {count, nodeId, supporterFee, authorFee}
     }
 }
 

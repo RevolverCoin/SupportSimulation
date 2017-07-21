@@ -13,7 +13,7 @@ import {fromJS, List, Map} from 'immutable'
  * @param fee
  * @returns {{reward: (*|Map<any, any>|Map<string, any>|R), outputRewardMap: (*|Map<any, any>|Map<string, any>|R), adjacentNodes: *, matrix: *}}
  */
-function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType}) {
+function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType, authorFee, supporterFee}) {
     //get adjacent  nodes
     const adjacentNodes = getAdjacentNodes(node, matrix)
 
@@ -32,7 +32,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
 
     const authorsReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
-        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.7 : 0.06)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? authorFee : supporterFee)
         return reward * fee
     })
 
@@ -42,7 +42,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
 
     const outputReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
-        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? 0.7 : 0.06)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? authorFee: supporterFee)
         return reward * (1 - fee)
     })
 
@@ -91,6 +91,8 @@ function processNodes(nodes,
             matrix: curMatrix,
             inputReward,
             height: 100,
+            authorFee,
+            supporterFee,
             getWeights,
             getNodeType
         });

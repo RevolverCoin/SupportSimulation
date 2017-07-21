@@ -18,6 +18,8 @@ const DEFAULT_STATE = {
     pGen: 0.3,
     pAuth: 0.2,
     pSup: 0.5,
+    authorFee : 0.7,
+    supporterFee : 0.05
 }
 
 class StartSimulationModal extends Component {
@@ -50,6 +52,8 @@ class StartSimulationModal extends Component {
             pGen,
             pAuth,
             pSup,
+            authorFee,
+            supporterFee
         } = this.state;
 
         onClose && onClose({
@@ -62,7 +66,9 @@ class StartSimulationModal extends Component {
             supToGenActivity,
             pGen,
             pAuth,
-            pSup
+            pSup,
+            authorFee,
+            supporterFee
         })
 
     }
@@ -151,6 +157,18 @@ class StartSimulationModal extends Component {
                         <span>pSup:</span>
                         <input type="input" placeholder="pSup" value={this.state.pSup}
                                onChange={({target:{value}}) => this._handleChange("pSup", value)}/>
+                    </label>
+
+                    <label>
+                        <span>Author fee:</span>
+                        <input type="input" placeholder="Author fee" value={this.state.authorFee}
+                               onChange={({target:{value}}) => this._handleChange("authorFee", value)}/>
+                    </label>
+
+                    <label>
+                        <span>Supporter fee:</span>
+                        <input type="input" placeholder="Supporter fee" value={this.state.supporterFee}
+                               onChange={({target:{value}}) => this._handleChange("supporterFee", value)}/>
                     </label>
 
 

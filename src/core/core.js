@@ -333,7 +333,7 @@ export function getGenerators(state) {
 }
 
 
-function createBlock(state, subsidy, nodeId) {
+function createBlock(state, subsidy, nodeId,supporterFee, authorFee) {
     const probTable = buildGeneratorsPOSProbTable(state);
     //returns random author node id based on probability table
     const finderId = nodeId || getRandomNodeId(probTable)
@@ -344,10 +344,10 @@ function createBlock(state, subsidy, nodeId) {
     const nodeMap = state.get('nodes').reduce((acc, next) => acc.set(next.get('id'), next), Map())
 
 
-    return distributeReward(state.update('blocks', blocks => blocks.push(block)), block, nodeId => nodeMap.getIn([nodeId, 'type']), 0.1, 0.01)
+    return distributeReward(state.update('blocks', blocks => blocks.push(block)), block, nodeId => nodeMap.getIn([nodeId, 'type']), authorFee, supporterFee)
 
 }
 
-export function generatePOSBlock(state, count, subsidy, nodeId) {
-    return Range(0, count).reduce((acc, next) => createBlock(acc, subsidy, nodeId), state)
+export function generatePOSBlock(state, count, subsidy, nodeId,supporterFee, authorFee) {
+    return Range(0, count).reduce((acc, next) => createBlock(acc, subsidy, nodeId,supporterFee, authorFee), state)
 }
