@@ -66,12 +66,16 @@ h3 {
 
 .charts-modal{
   width: 800px;
-  height: 500px;
+  height: 600px;
   background-color: antiquewhite;
   margin: 20px auto;
   padding: 30px;
 }
 
+
+.charts-modal .Dropdown-root{
+  margin-bottom: 20px;
+}
 
 .start-simulation-modal{
   width: 400px;

@@ -55,6 +55,9 @@ export default (state = INITIAL_STATE, action) => {
         case actions.SET_CHARTS_POPUP_OPEN:
             return state.set('isChartsModalOpen', action.data)
 
+        case actions.SET_CHARTS_POPUP_ITERATION:
+            return state.set('chartsModalIteration', action.data)
+
         default:
             return state;
     }

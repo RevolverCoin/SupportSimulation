@@ -89,7 +89,7 @@ export function computeStatistics() {
  * sum of pGen + pAuth + pSup must be equal to 1
  * @returns {function(*=, *=)}
  */
-export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, supporterFee, authorFee, sampleSize = 3, downloadCSV = false},) {
+export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, supporterFee, authorFee, sampleSize = 1, downloadCSV = false},) {
     return (dispatch, getState) => {
         const magRange = Range(magMin, magMax, magStep);
         const densRange = Range(densMin, densMax, densStep)
@@ -122,7 +122,7 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
                     const generators = getNodeOfType(getState(), NodeType.GENERATOR)
 
                     generators.forEach(generator => {
-                        dispatch(generatePOSBlock(1, generator.get('id'),  supporterFee, authorFee))
+                        dispatch(generatePOSBlock(1, generator.get('id'), supporterFee, authorFee))
                     })
 
 
@@ -138,7 +138,7 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 
         dispatch(computeStatistics())
 
-        if (downloadCSV){
+        if (downloadCSV) {
             const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
             dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount, "authorsReward.csv")
             dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount, "supportersReward.csv")
@@ -197,5 +197,12 @@ export function setChartsModalOpen(value) {
     return {
         type: types.SET_CHARTS_POPUP_OPEN,
         data: value
+    }
+}
+
+export function setChartsPopupIteration(iteration) {
+    return {
+        type: types.SET_CHARTS_POPUP_ITERATION,
+        data: iteration
     }
 }
