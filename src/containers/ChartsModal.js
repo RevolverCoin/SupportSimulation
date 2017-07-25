@@ -63,7 +63,10 @@ class ChartsModal extends Component {
     }
 
     render() {
-        const {isOpen, onCancel, iterations, iteration, setChartsPopupIteration} = this.props;
+        const {isOpen, data, onCancel, iterations, iteration, setChartsPopupIteration} = this.props;
+
+        const iterationDesc = data ? `${iteration.toString()} (nodes : ${data.getIn([iteration, 'mag'])}, density : ${data.getIn([iteration, 'dens'])})` : 'no iteration data'
+
         return (
             <Modal
                 isOpen={isOpen}
@@ -76,7 +79,7 @@ class ChartsModal extends Component {
             >
                 <h2>Simulation results</h2>
                 <p>Select iteration</p>
-                <Dropdown options={iterations} value={iteration} onChange={setChartsPopupIteration}
+                <Dropdown options={iterations} value={iterationDesc} onChange={setChartsPopupIteration}
                           placeholder="Select iteration"/>
                 <RewardChartContainer/>
                 <button onClick={onCancel}>OK</button>
@@ -88,11 +91,12 @@ class ChartsModal extends Component {
 
 function mapStateToProps(state) {
     const processed = state.getIn(['statistics', 'processed'])
-    const iterations = processed && Range(0,processed.size).toJS()
+    const iterations = processed && Range(0, processed.size).toJS()
     return {
         isOpen: state.get('isChartsModalOpen'),
+        data: state.getIn(['statistics', 'processed']),
         iterations,
-        iteration: (state.get('chartsModalIteration')||0).toString()
+        iteration: (state.get('chartsModalIteration') || 0)
     }
 
 }
