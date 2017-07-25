@@ -1,9 +1,9 @@
 import * as types from "../constants/ActionType";
-import {getGenerators, getSupporters, INITIAL_STATE, getNodeOfType} from "../core/core";
+import {getGenerators, getSupporters, getNodeOfType} from "../core/core";
 import {Range} from 'immutable'
 import * as NodeType from "../constants/NodeType";
 
-import {dumpState, postProcess, dumpCSV} from '../core/statistics'
+import {postProcess, dumpCSV} from '../core/statistics'
 
 export function createAuthor(count) {
     return {
