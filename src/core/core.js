@@ -20,12 +20,12 @@ function createNode(count, baseId, nodeType, createParams) {
         type: nodeType,
         title: "",
         shape: "circle",
-        scaling:{
+        scaling: {
             min: 2,
             max: 50,
             label: {
-                min:2,
-                max:40
+                min: 2,
+                max: 40
             }
         },
         x: getRandomInt(0, 900),
@@ -37,11 +37,10 @@ function createNode(count, baseId, nodeType, createParams) {
 
 
 export function resetState(state) {
-    return INITIAL_STATE.set('statistics',  state.get('statistics'))
+    return INITIAL_STATE.set('statistics', state.get('statistics'))
 }
 
-export function restart(state)
-{
+export function restart(state) {
     return state.merge(INITIAL_STATE);
 }
 
@@ -55,7 +54,7 @@ export function createAuthor(state, count) {
                 color: "#6dcff6",
 
                 title: "",
-                mass:200,
+                mass: 200,
                 popularity: getRandomInt(0, 100)
             })))
         );
@@ -145,8 +144,7 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
 }
 
 
-function getTotalRewardOfType(state, node)
-{
+function getTotalRewardOfType(state, node) {
     return state.get('nodes').reduce((acc, next) => {
         let cur = 0;
         if (next.get('type') === node.get('type')) {
@@ -159,15 +157,14 @@ function getTotalRewardOfType(state, node)
 }
 
 /* action for updated structure, when tooltips update occurs */
-export function updateStructure(state)
-{
+export function updateStructure(state) {
     return state.update('nodes', nodes => {
         return nodes.map(node => {
 
             const edges = state.get('edges');
-            const supports = edges.filter(value=>value.get('source') === node.get('id'));
-            const supporters = edges.filter(value=>value.get('target') === node.get('id'));
-            const supportersGen = edges.filter(value=>value.get('target') === node.get('id') && isGen(state, value.get('source')));
+            const supports = edges.filter(value => value.get('source') === node.get('id'));
+            const supporters = edges.filter(value => value.get('target') === node.get('id'));
+            const supportersGen = edges.filter(value => value.get('target') === node.get('id') && isGen(state, value.get('source')));
 
             // update generator color
 
@@ -177,7 +174,7 @@ export function updateStructure(state)
                 color = "#fdc689";
 
                 const blocks = state.get('blocks');
-                if (blocks && !blocks.isEmpty() ) {
+                if (blocks && !blocks.isEmpty()) {
 
                     if (node.get('id') === blocks.last().get('finderId')) {
                         color = '#ff0000';
@@ -187,19 +184,18 @@ export function updateStructure(state)
             }
 
 
+            let typeRewardTotal = getTotalRewardOfType(state, node);
 
-            let typeRewardTotal   = getTotalRewardOfType(state, node);
-
-            let nodeTypeReward      = 0;
+            let nodeTypeReward = 0;
             if (typeRewardTotal && typeRewardTotal !== 0)
-                 nodeTypeReward = (node.get('reward') ? node.get('reward') / typeRewardTotal * 100 : 0) ;
+                nodeTypeReward = (node.get('reward') ? node.get('reward') / typeRewardTotal * 100 : 0);
 
 
-            let totalReward = state.get('blocks').reduce((acc, next) => acc+next.get('blockReward'), 0);
+            let totalReward = state.get('blocks').reduce((acc, next) => acc + next.get('blockReward'), 0);
 
-            let nodeTotalReward      = 0;
-            if (totalReward && totalReward !==0) {
-                nodeTotalReward = (node.get('reward') ? node.get('reward') / totalReward * 100 : 0) ;
+            let nodeTotalReward = 0;
+            if (totalReward && totalReward !== 0) {
+                nodeTotalReward = (node.get('reward') ? node.get('reward') / totalReward * 100 : 0);
             }
 
             const title =
@@ -229,7 +225,7 @@ export function updateStructure(state)
             } else {
                 nodeTypeReward = 0.1;
             }
-            return node.merge({title : title, value:nodeTypeReward, color});
+            return node.merge({title: title, value: nodeTypeReward, color});
         });
 
     });
@@ -245,8 +241,7 @@ export function updateStructure(state)
 export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
     const authorSupportTable = buildAuthorsProbTable(state)
     //returns random author node id based on probability table
-    const getRandomAuthor = () => getRandomNodeId(authorSupportTable)
-
+    const getRandomAuthor = (exclude) => getRandomNodeId(authorSupportTable, exclude)
     return state.update('edges', edges => {
         let result = edges;
         nodes.forEach(node => {
@@ -255,11 +250,7 @@ export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
             const supportCount = getRandomInt(sMin, Math.min(sMax, authorSupportTable.size));
             result = result.concat(Repeat(0, supportCount).map(() => {
 
-                    let authorId = getRandomAuthor();
-
-                    while (supportedAuthors.has(authorId)) {
-                        authorId = getRandomAuthor()
-                    }
+                    let authorId = getRandomAuthor(supportedAuthors);
 
                     supportedAuthors = supportedAuthors.add(authorId)
                     const nodeId = `${node.get('id')}_${authorId}`
@@ -281,9 +272,15 @@ export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
     })
 }
 
-function getRandomNodeId(probTable) {
+/**
+ *
+ * @param probTable
+ * @param exclude - set of node ids to exlude from selection
+ * @returns {any|T|*}
+ */
+function getRandomNodeId(probTable, exclude) {
     const r = rand.random();
-    const entry = probTable.findLast(a => a.get('prob') <= r) || probTable.first()
+    const entry = probTable.findLast(a => (!exclude || !exclude.has(a.get('id'))) && a.get('prob') <= r) || probTable.first()
     return entry.getIn(['node', 'id'])
 }
 
@@ -314,7 +311,7 @@ export function getNodeOfType(state, nodeType) {
     return state.get('nodes').filter(node => node.get('type') === nodeType);
 }
 
-export function isGen(state, nodeId){
+export function isGen(state, nodeId) {
 
     const node = state.get('nodes').find(node => node.get('id') === nodeId);
     return node.get('type') === 'generator';
@@ -333,13 +330,13 @@ export function getGenerators(state) {
 }
 
 
-function createBlock(state, subsidy, nodeId,supporterFee, authorFee) {
+function createBlock(state, subsidy, nodeId, supporterFee, authorFee) {
     const probTable = buildGeneratorsPOSProbTable(state);
     //returns random author node id based on probability table
     const finderId = nodeId || getRandomNodeId(probTable)
     const block = Map({finderId, subsidy, blockReward: 10})
 
-    state = state.update(['sim', 'totalReward'], val=>val+block.get('blockReward'));
+    state = state.update(['sim', 'totalReward'], val => val + block.get('blockReward'));
 
     const nodeMap = state.get('nodes').reduce((acc, next) => acc.set(next.get('id'), next), Map())
 
@@ -348,6 +345,6 @@ function createBlock(state, subsidy, nodeId,supporterFee, authorFee) {
 
 }
 
-export function generatePOSBlock(state, count, subsidy, nodeId,supporterFee, authorFee) {
-    return Range(0, count).reduce((acc, next) => createBlock(acc, subsidy, nodeId,supporterFee, authorFee), state)
+export function generatePOSBlock(state, count, subsidy, nodeId, supporterFee, authorFee) {
+    return Range(0, count).reduce((acc, next) => createBlock(acc, subsidy, nodeId, supporterFee, authorFee), state)
 }
