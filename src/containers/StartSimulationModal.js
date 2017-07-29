@@ -18,8 +18,9 @@ const DEFAULT_STATE = {
     pGen: 0.3,
     pAuth: 0.2,
     pSup: 0.5,
-    authorFee : 0.7,
-    supporterFee : 0.05
+    authorFee: 0.7,
+    supporterFee: 0.05,
+    sampleSize: 10
 }
 
 class StartSimulationModal extends Component {
@@ -33,7 +34,7 @@ class StartSimulationModal extends Component {
 
     _handleChange(param, value) {
         this.setState({
-            [param]:parseFloat(value)
+            [param]: parseFloat(value)
         })
 
         console.log(this.state)
@@ -53,7 +54,8 @@ class StartSimulationModal extends Component {
             pAuth,
             pSup,
             authorFee,
-            supporterFee
+            supporterFee,
+            sampleSize
         } = this.state;
 
         onClose && onClose({
@@ -68,7 +70,8 @@ class StartSimulationModal extends Component {
             pAuth,
             pSup,
             authorFee,
-            supporterFee
+            supporterFee,
+            sampleSize
         })
 
     }
@@ -79,7 +82,7 @@ class StartSimulationModal extends Component {
         return (
             <Modal
                 isOpen={isOpen}
-                onAfterOpen={()=>this.setState({...DEFAULT_STATE})}
+                onAfterOpen={() => this.setState({...DEFAULT_STATE})}
                 contentLabel="Modal"
                 className={{
                     base: 'start-simulation-modal'
@@ -171,6 +174,11 @@ class StartSimulationModal extends Component {
                                onChange={({target:{value}}) => this._handleChange("supporterFee", value)}/>
                     </label>
 
+                    <label>
+                        <span>Sample count:</span>
+                        <input type="input" placeholder="Sample count" value={this.state.sampleSize}
+                               onChange={({target:{value}}) => this._handleChange("sampleSize", value)}/>
+                    </label>
 
                     <input type="submit" value="Start simulation"/>
                 </form>
