@@ -1,9 +1,9 @@
 import * as types from "../constants/ActionType";
-import {getGenerators, getSupporters, getNodeOfType} from "../core/core";
+import {getGenerators, getNodeOfType, getSupporters} from "../core/core";
 import {Range} from 'immutable'
 import * as NodeType from "../constants/NodeType";
 
-import {postProcess, dumpCSV} from '../core/statistics'
+import {dumpCSV, postProcess} from '../core/statistics'
 
 export function createAuthor(count) {
     return {
@@ -44,11 +44,11 @@ export function resetState() {
     }
 }
 
-export function addStatistics(round, mag, dens) {
+export function addStatistics({sampleSize, round, mag, dens, pGen, pAuth}) {
     return (dispatch, getState) => {
         dispatch({
             type: types.ADD_STATISTICS_RAW,
-            data: {round, state: getState(), mag, dens}
+            data: {round, data: getState(), mag, dens, pGen, pAuth, sampleSize}
         })
     }
 }
@@ -86,11 +86,29 @@ export function computeStatistics() {
  * @param pAuth - percentage\part of author nodes
  * @param pSup - percentage\part of supported nodes
  * @param sampleSize - number of samples to use for each mag\dens
+ * @param useCurrentNetwork - use current graph and don't generate a random one
  * sum of pGen + pAuth + pSup must be equal to 1
  * @returns {function(*=, *=)}
  */
-export function createSimulation({magMin, magMax, magStep, densMin, densMax, densStep, supToGenActivity, pGen, pAuth, pSup, supporterFee, authorFee, sampleSize = 1, downloadCSV = false},) {
+export function createSimulation({
+                                     magMin,
+                                     magMax,
+                                     magStep,
+                                     densMin,
+                                     densMax,
+                                     densStep,
+                                     supToGenActivity,
+                                     pGen,
+                                     pAuth,
+                                     pSup,
+                                     supporterFee,
+                                     authorFee,
+                                     sampleSize = 1,
+                                     useCurrentNetwork = false,
+                                     downloadCSV = false
+                                 },) {
     return (dispatch, getState) => {
+        console.time("create_simulation");
         const magRange = Range(magMin, magMax, magStep);
         const densRange = Range(densMin, densMax, densStep)
 
@@ -99,51 +117,61 @@ export function createSimulation({magMin, magMax, magStep, densMin, densMax, den
         let round = 0;
         magRange.forEach(mag => {
             densRange.forEach(dens => {
+                const genCount = Math.floor(mag * pGen);
+                const authCount = Math.floor(mag * pAuth);
+                const supCount = mag - genCount - authCount;
+
+                const avgGenSupport = 0.5 * dens * mag * (mag - 1) / (genCount + supToGenActivity * supCount )
+                const avgSupSupport = avgGenSupport * supToGenActivity
 
                 for (let currentSample = 0; currentSample < sampleSize; ++currentSample) {
-                    console.log(`Starting round ${round} mag:${mag}, dens:${dens}, sample : ${currentSample}`)
-                    const genCount = mag * pGen;
-                    const authCount = mag * pAuth;
-                    const supCount = mag * pSup;
+                    if (!useCurrentNetwork) {
+                        // console.log(`Starting round ${round} mag:${mag}, dens:${dens}, sample : ${currentSample}`)
+
+                        dispatch(createGenerator(genCount))
+                        dispatch(createAuthor(authCount))
+                        dispatch(createSupporter(supCount))
 
 
-                    const avgGenSupport = 0.5 * dens * (mag - 1) / (pGen + supToGenActivity * pSup )
-                    const avgSupSupport = avgGenSupport * supToGenActivity
+                        dispatch(updateAuthorsSupportProb())
+                        const genSMax = 2 * avgGenSupport - 1;
+                        const supSMax = 2 * avgSupSupport - 1;
 
-                    dispatch(createGenerator(Math.floor(genCount)))
-                    dispatch(createAuthor(Math.floor(authCount)))
-                    dispatch(createSupporter(Math.floor(supCount)))
+                        const genDelta = genSMax > authCount ? genSMax - authCount : 0
+                        const supDelta = supSMax > authCount ? supSMax - authCount : 0
 
 
-                    dispatch(updateAuthorsSupportProb())
-                    dispatch(establishSupportFromGenerators({sMin: 0, sMax: 2 * avgGenSupport}))
-                    dispatch(establishSupportFromSupporters({sMin: 0, sMax: 2 * avgSupSupport}))
+                        dispatch(establishSupportFromGenerators({sMin: 1 + genDelta, sMax: genSMax - genDelta}))
+                        dispatch(establishSupportFromSupporters({sMin: 1 + supDelta, sMax: supSMax - supDelta}))
+                    }
 
+                    console.time("simulation");
                     const generators = getNodeOfType(getState(), NodeType.GENERATOR)
-
-                    generators.forEach(generator => {
-                        dispatch(generatePOSBlock(1, generator.get('id'), supporterFee, authorFee))
-                    })
+                    dispatch(generateBlocks(generators, supporterFee, authorFee))
 
 
-                    dispatch(addStatistics(round, mag, dens))
+                    console.timeEnd("simulation");
+                    dispatch(addStatistics({sampleSize, round, mag, dens, pGen, pAuth}))
                     console.log(`added statistics for round ${round}, sample : ${currentSample}`)
-                    dispatch(resetState())
+                    if (!useCurrentNetwork) {
+                        dispatch(resetState())
+                    }
                 }
 
                 ++round;
             })
         })
 
-
         dispatch(computeStatistics())
-
+        dispatch(updateStructure())
         if (downloadCSV) {
             const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
             dumpCSV(postProcessedData.avgAuthorsRewardList, postProcessedData.maxSupportCount, "authorsReward.csv")
             dumpCSV(postProcessedData.avgSupportersRewardList, postProcessedData.maxSupportCount, "supportersReward.csv")
             dumpCSV(postProcessedData.avgGeneratorsRewardList, postProcessedData.maxSupportCount, "generatorsReward.csv")
         }
+
+
     }
 }
 
@@ -167,15 +195,15 @@ export function updateStructure() {
     }
 }
 
-export function establishSupportFromGenerators({sMinx = 1, sMax = 8}) {
+export function establishSupportFromGenerators({sMin = 1, sMax = 8}) {
     return (dispatch, getState) => {
-        dispatch(establishSupport(getGenerators(getState()), sMinx, sMax, 1, 100))
+        dispatch(establishSupport(getGenerators(getState()), sMin, sMax, 1, 100))
     }
 }
 
-export function establishSupportFromSupporters({sMinx = 1, sMax = 6}) {
+export function establishSupportFromSupporters({sMin = 1, sMax = 6}) {
     return (dispatch, getState) => {
-        dispatch(establishSupport(getSupporters(getState()), sMinx, sMax, 1, 100))
+        dispatch(establishSupport(getSupporters(getState()), sMin, sMax, 1, 100))
     }
 }
 
@@ -183,6 +211,20 @@ export function generatePOSBlock(count, nodeId, supporterFee, authorFee) {
     return {
         type: types.GENERATE_POS_BLOCK,
         data: {count, nodeId, supporterFee, authorFee}
+    }
+}
+
+export function generateBlocks(nodes, supporterFee, authorFee ) {
+  return {
+      type: types.GENERATE_BLOCKS,
+      data: {nodes, supporterFee, authorFee}
+  }
+}
+
+export function generatePOSBlockByIndex(count, index, supporterFee, authorFee) {
+    return (dispatch, getState)=>{
+        const generators = getNodeOfType(getState(), NodeType.GENERATOR)
+        dispatch(generatePOSBlock(count, generators.getIn([index, 'id']),supporterFee, authorFee))
     }
 }
 
