@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {Provider} from "react-redux";
 import {fromJS} from "immutable";
 
-import graphData from './data/data'
+import {graph1} from './constants/GraphData'
 
 import "./App.css";
 import Graph from "./containers/graphVIS";
@@ -16,6 +16,7 @@ import {
     createSupporter,
     createGenerator,
     generatePOSBlock,
+    generatePOSBlockByIndex,
     establishSupportFromGenerators,
     establishSupportFromSupporters,
     updateAuthorsSupportProb,
@@ -26,9 +27,7 @@ import {
     setCreateSimulationModalOpen
 } from "./actions/actions";
 
-
-const initialGraph = null; //graphData
-
+const initialGraph = null;
 
 let store;
 if (!initialGraph) {
@@ -49,6 +48,8 @@ class App extends Component {
         this.onShowCharts = this.onShowCharts.bind(this);
         this.onRunPOS = this.onRunPOS.bind(this);
 
+        this.currenGenIndex = 0;
+
         this.state = {
             graphKey: 0,
             isPOSLaunched: false,
@@ -58,7 +59,8 @@ class App extends Component {
     }
 
     onGenBlock() {
-        store.dispatch(generatePOSBlock(1));
+        store.dispatch(generatePOSBlockByIndex(1, this.currenGenIndex++, 0.1,0.5));
+     //   store.dispatch(generatePOSBlock(1));
         store.dispatch(updateStructure());
 
         this.setState({blockId: this.state.blockId + 1});
@@ -73,7 +75,7 @@ class App extends Component {
     }
 
     onLaunchSimulation() {
-        store.dispatch(restart());
+        //store.dispatch(restart());
         store.dispatch(setCreateSimulationModalOpen(true))
     }
 
