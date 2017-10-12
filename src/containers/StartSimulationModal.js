@@ -5,23 +5,26 @@ import Modal from 'react-modal';
 import {connect} from 'react-redux';
 
 
-import {setCreateSimulationModalOpen, createSimulation, restart} from '../actions/actions'
+import {setCreateSimulationModalOpen, createSimulation, restart, updateStructure} from '../actions/actions'
+
 
 const DEFAULT_STATE = {
-    magMin: 45,
-    magMax: 50,
+    magMin: 120,
+    magMax: 123,
     magStep: 5,
     densMin: 0.2,
-    densMax: 0.3,
-    densStep: 0.1,
+    densMax: 0.5,
+    densStep: 0.3,
     supToGenActivity: 1,
     pGen: 0.3,
     pAuth: 0.2,
     pSup: 0.5,
-    authorFee: 0.7,
-    supporterFee: 0.05,
-    sampleSize: 10
+    authorFee: 0.5,
+    supporterFee: 0.1,
+    sampleSize: 1
 }
+
+const Separator = () => <div className="separator"/>
 
 class StartSimulationModal extends Component {
 
@@ -34,10 +37,20 @@ class StartSimulationModal extends Component {
 
     _handleChange(param, value) {
         this.setState({
-            [param]: parseFloat(value)
+            [param]: value,
+        }, ()=>{
+            const precision = 1000;
+            const pGen = parseFloat(this.state.pGen)
+            const pAuth = parseFloat(this.state.pAuth)
+            const pSup = Math.round( precision*(1 - pGen - pAuth))/precision
+
+
+            this.setState({
+                densMax:  Math.round( precision*2 * pAuth * (pGen + pSup))/precision,
+                pSup
+            })
         })
 
-        console.log(this.state)
     }
 
     _onStartSimulation() {
@@ -91,93 +104,100 @@ class StartSimulationModal extends Component {
                 <h2>Simulation parameters</h2>
                 <form onSubmit={this._onStartSimulation}>
                     <label>
-                        <span>magMin:</span>
+                        <span>n_min (magMin):</span>
                         <input type="input" placeholder="magMin" value={this.state.magMin}
-                               onChange={({target:{value}}) => this._handleChange("magMin", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("magMin", value)}/>
                     </label>
 
                     <label>
-                        <span>magMax:</span>
+                        <span>n_max (magMax):</span>
                         <input type="input" placeholder="magMax" value={this.state.magMax}
-                               onChange={({target:{value}}) => this._handleChange("magMax", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("magMax", value)}/>
 
                     </label>
 
-
                     <label>
-                        <span>magStep:</span>
+                        <span>n step:</span>
                         <input type="input" placeholder="magStep" value={this.state.magStep}
-                               onChange={({target:{value}}) => this._handleChange("magStep", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("magStep", value)}/>
+                    </label>
+
+                    <Separator/>
+
+                    <label>
+                        <span>γ1 (pGen):</span>
+                        <input type="input" placeholder="pGen" value={this.state.pGen}
+                               onChange={({target: {value}}) => this._handleChange("pGen", value)}/>
+
                     </label>
 
 
                     <label>
-                        <span>densMin:</span>
+                        <span>γ2 (pAuth):</span>
+                        <input type="input" placeholder="pAuth" value={this.state.pAuth}
+                               onChange={({target: {value}}) => this._handleChange("pAuth", value)}/>
+
+                    </label>
+
+
+                    <label>
+                        <span>γ3 (pSup):</span>
+                        <input type="input" placeholder="pSup" value={this.state.pSup} disabled={true}
+                               onChange={({target: {value}}) => this._handleChange("pSup", value)}/>
+                    </label>
+
+
+                    <label>
+                        <span>δ (supToGenActivity):</span>
+                        <input type="input" placeholder="supToGenActivity" value={this.state.supToGenActivity}
+                               onChange={({target: {value}}) => this._handleChange("supToGenActivity", value)}/>
+                    </label>
+
+                    <Separator/>
+
+
+                    <label>
+                        <span>d_min (densMin):</span>
                         <input type="input" placeholder="densMin" value={this.state.densMin}
-                               onChange={({target:{value}}) => this._handleChange("densMin", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("densMin", value)}/>
 
                     </label>
 
 
                     <label>
-                        <span>densMax:</span>
-                        <input type="input" placeholder="densMax" value={this.state.densMax}
-                               onChange={({target:{value}}) => this._handleChange("densMax", value)}/>
+                        <span>d_max (densMax):</span>
+                        <input type="input" placeholder="densMax" value={this.state.densMax} disabled={true}
+                               onChange={({target: {value}}) => this._handleChange("densMax", value)}/>
                     </label>
 
 
                     <label>
                         <span>densStep:</span>
                         <input type="input" placeholder="densStep" value={this.state.densStep}
-                               onChange={({target:{value}}) => this._handleChange("densStep", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("densStep", value)}/>
                     </label>
 
+                    <Separator/>
 
                     <label>
-                        <span>supToGenActivity:</span>
-                        <input type="input" placeholder="supToGenActivity" value={this.state.supToGenActivity}
-                               onChange={({target:{value}}) => this._handleChange("supToGenActivity", value)}/>
-                    </label>
-
-
-                    <label>
-                        <span>pGen:</span>
-                        <input type="input" placeholder="pGen" value={this.state.pGen}
-                               onChange={({target:{value}}) => this._handleChange("pGen", value)}/>
-
-                    </label>
-
-
-                    <label>
-                        <span>pAuth:</span>
-                        <input type="input" placeholder="pAuth" value={this.state.pAuth}
-                               onChange={({target:{value}}) => this._handleChange("pAuth", value)}/>
-
-                    </label>
-
-
-                    <label>
-                        <span>pSup:</span>
-                        <input type="input" placeholder="pSup" value={this.state.pSup}
-                               onChange={({target:{value}}) => this._handleChange("pSup", value)}/>
-                    </label>
-
-                    <label>
-                        <span>Author fee:</span>
+                        <span>Author fee (α1):</span>
                         <input type="input" placeholder="Author fee" value={this.state.authorFee}
-                               onChange={({target:{value}}) => this._handleChange("authorFee", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("authorFee", value)}/>
                     </label>
 
                     <label>
-                        <span>Supporter fee:</span>
+                        <span>Supporter fee (α2):</span>
                         <input type="input" placeholder="Supporter fee" value={this.state.supporterFee}
-                               onChange={({target:{value}}) => this._handleChange("supporterFee", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("supporterFee", value)}/>
                     </label>
+
+                    <Separator/>
+                    <Separator/>
 
                     <label>
                         <span>Sample count:</span>
                         <input type="input" placeholder="Sample count" value={this.state.sampleSize}
-                               onChange={({target:{value}}) => this._handleChange("sampleSize", value)}/>
+                               onChange={({target: {value}}) => this._handleChange("sampleSize", value)}/>
                     </label>
 
                     <input type="submit" value="Start simulation"/>
@@ -199,16 +219,16 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        onClose(params){
+        onClose(params) {
             dispatch(setCreateSimulationModalOpen(false))
             dispatch(restart());
             dispatch(createSimulation(params));
         },
 
-        onCancel(){
+        onCancel() {
             dispatch(setCreateSimulationModalOpen(false))
         }
     }
 }
 
-export default  connect(mapStateToProps, mapDispatchToProps)(StartSimulationModal)
+export default connect(mapStateToProps, mapDispatchToProps)(StartSimulationModal)
