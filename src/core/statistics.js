@@ -32,7 +32,6 @@ export function computeStatistics(state) {
         const result = avg.keySeq().reduce((acc, next) => {
             return acc.set(next, getAvg(avg.get(next)))
         }, Map())
-        console.log(totalReward, nodes, result)
         return result;
     }
 
@@ -40,7 +39,6 @@ export function computeStatistics(state) {
      * averages results of all samples of the round
      */
     const calcSamplesAverage = (round) => {
-        console.log(round)
         //calcs total reward for specified nodes
         const getTotalReward = (rewards) => rewards ? (rewards.keySeq().reduce((acc, next) => {
             return acc + (List.isList(rewards.get(next)) ? rewards.get(next).reduce((a, n) => a + n||0, 0) : rewards.get(next)||0)
@@ -99,7 +97,6 @@ export function computeStatistics(state) {
     const result = state
         .getIn(['statistics', 'raw'])
         .reduce((acc, entry) => {
-            console.log(entry)
             const mag = entry.get('mag')
             const dens = entry.get('dens')
             const round = entry.get('round')
@@ -121,14 +118,7 @@ export function computeStatistics(state) {
             const authorsReward = getTotalReward(authors)
             const supportersReward = getTotalReward(supporters)
             const generatorsReward = getTotalReward(generators)
-
-            console.log("total reward for round : ", getTotalReward(stateSnapshot.get('nodes')))
-            console.log("authorsReward : ", authorsReward)
-            console.log("supportersReward : ", supportersReward)
-            console.log("generatorsReward : ", generatorsReward)
-
             const roundDistributedReward = authorsReward + supportersReward + generatorsReward;
-
 
             return acc.update(wave++, Map(), val => val
                 .set('round', round)
@@ -214,7 +204,6 @@ export function dumpCSV(data, maxSupportCount = 1, exportFileName) {
         else {
             const result = json2csv({data, fields});
             console.log(result);
-
         }
 
     } catch (err) {

@@ -233,9 +233,7 @@ export function distributeReward({state, adjacencyMatrix, block, getNodeFee}) {
         outReward = outReward.set(nodeId, nodeReward * (1 - fee))
     }
 
-    console.time("bfs");
     bfs(matrix, finder, mergeReward)
-    console.timeEnd("bfs");
 
     return state
         .set("minDistToGenerator", List())
