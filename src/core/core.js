@@ -1,6 +1,7 @@
 import {fromJS, Range, Map, Repeat, List, Set} from "immutable";
 import * as NodeType from "../constants/NodeType";
-import {getRandomInt} from "./utils";
+import {getRandomInt, createAdjacencyMatrix} from "./utils";
+
 const rand = require('random-seed').create('seed')
 
 import {distributeReward} from './rewardDistribution'
@@ -16,9 +17,9 @@ export const INITIAL_STATE = fromJS({
 function createNode(count, baseId, nodeType, createParams) {
     return Range(0, count).map(index => Map({
         id: baseId + index,
-        //label: `${nodeType[0]}${baseId + index}`,
+        label: `${nodeType[0]}${baseId + index}`,
         type: nodeType,
-        title: "",
+        title: '',
         shape: "circle",
         scaling: {
             min: 2,
@@ -34,7 +35,6 @@ function createNode(count, baseId, nodeType, createParams) {
     })).toList()
 
 }
-
 
 export function resetState(state) {
     return INITIAL_STATE.set('statistics', state.get('statistics'))
@@ -75,7 +75,6 @@ export function createGenerator(state, count) {
         )
 }
 
-
 export function createSupporter(state, count) {
     const nodeId = state.get('lastNodeId');
     return state
@@ -90,6 +89,7 @@ export function createSupporter(state, count) {
             })))
         )
 }
+
 export function updateNodeProbability(state, nodeType, metricName, probField) {
     const nodes = getNodeOfType(state, nodeType)
     const metric = nodes.map(a => a.get(metricName))
@@ -200,6 +200,7 @@ export function updateStructure(state) {
 
             const title =
                 "<p>Type: " + node.get('type') + "</p>" +
+                "<p>Id: " + node.get('id') + "</p>" +
                 "<p>Supports: " + supports.size + "</p>" +
                 "<p>Supporters: " + supporters.size + "</p>" +
                 "<p>Supporters Gen: " + supportersGen.size + "</p>" +
@@ -239,19 +240,20 @@ export function updateStructure(state) {
  * @param sMax maximum number of supports per node
  */
 export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
-    const authorSupportTable = buildAuthorsProbTable(state)
+    const allAuthors = getAuthors(state).map(a=>a.get('id')).toSet()
+
     //returns random author node id based on probability table
-    const getRandomAuthor = (exclude) => getRandomNodeId(authorSupportTable, exclude)
+    const getRandomAuthor = (table) => table.get( Math.round(Math.random()*table.size))
     return state.update('edges', edges => {
         let result = edges;
+
         nodes.forEach(node => {
             //set of authors that were supported by current node
             let supportedAuthors = Set()
-            const supportCount = getRandomInt(sMin, Math.min(sMax, authorSupportTable.size));
+            const supportCount = getRandomInt(sMin, Math.min(sMax, allAuthors.size + 1));
             result = result.concat(Repeat(0, supportCount).map(() => {
-
-                    let authorId = getRandomAuthor(supportedAuthors);
-
+                    const table = allAuthors.subtract(supportedAuthors)
+                    let authorId = table.size === 1 ? table.toList().first() : getRandomAuthor(table.toList());
                     supportedAuthors = supportedAuthors.add(authorId)
                     const nodeId = `${node.get('id')}_${authorId}`
                     return Map({
@@ -266,7 +268,6 @@ export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
                 })
             )
 
-
         })
         return result
     })
@@ -275,12 +276,12 @@ export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
 /**
  *
  * @param probTable
- * @param exclude - set of node ids to exlude from selection
+ * @param exclude - set of node ids to exclude from selection
  * @returns {any|T|*}
  */
 function getRandomNodeId(probTable, exclude) {
     const r = rand.random();
-    const entry = probTable.findLast(a => (!exclude || !exclude.has(a.get('id'))) && a.get('prob') <= r) || probTable.first()
+    const entry = probTable.find(a => (!exclude || !exclude.has(a.get('id'))) && a.get('prob') >= r) || probTable.first()
     return entry.getIn(['node', 'id'])
 }
 
@@ -300,11 +301,17 @@ function buildGeneratorsPOSProbTable(state) {
  * @returns {*|List<any>|List<any>|R}
  */
 function buildNodesProbTable(nodes, probField) {
+
+    const probIsFunction = (typeof probField === "function")
+
     return nodes.reduce((acc, node) => {
         const curCumulativeProb = acc.last() ? acc.last().get('prob') : 0;
-        return acc.push(Map({node, prob: curCumulativeProb + node.get(probField)}))
+        const prob = probIsFunction ? probField() : node.get(probField)
+        return acc.push(Map({node, prob: curCumulativeProb + prob}))
     }, List())
 }
+
+
 
 
 export function getNodeOfType(state, nodeType) {
@@ -338,13 +345,35 @@ function createBlock(state, subsidy, nodeId, supporterFee, authorFee) {
 
     state = state.update(['sim', 'totalReward'], val => val + block.get('blockReward'));
 
-    const nodeMap = state.get('nodes').reduce((acc, next) => acc.set(next.get('id'), next), Map())
+    const getNodeFee =createGetNodeFeeFunc(state.get('nodes'))
 
-
-    return distributeReward(state.update('blocks', blocks => blocks.push(block)), block, nodeId => nodeMap.getIn([nodeId, 'type']), authorFee, supporterFee)
-
+    return distributeReward({state : state.update('blocks', blocks => blocks.push(block)), block, getNodeFee, authorFee, supporterFee})
 }
 
 export function generatePOSBlock(state, count, subsidy, nodeId, supporterFee, authorFee) {
     return Range(0, count).reduce((acc, next) => createBlock(acc, subsidy, nodeId, supporterFee, authorFee), state)
+}
+
+/**
+ * returns function that returns node fee based on type
+ * @param {*} nodes list of nodes
+ */
+export function createGetNodeFeeFunc (nodes, supporterFee, authorFee) {
+    const nodeMap = nodes.reduce((acc, next) => acc.set(next.get('id'), next.get('type')=== NodeType.AUTHOR ? authorFee : supporterFee), Map())
+    return nodeId => nodeMap.get(nodeId)
+}
+
+export function generateBlocks(state, nodes, supporterFee, authorFee) {
+    const matrix = createAdjacencyMatrix(state.get("edges"))
+    const getNodeFee =createGetNodeFeeFunc(state.get('nodes'), supporterFee, authorFee)
+    return nodes.reduce( (acc, next)=>{
+
+        const block = Map({finderId : next.get('id'), subsidy : 10, blockReward: 10})
+        acc = acc
+          .update(['sim', 'totalReward'], val => val + block.get('blockReward'))
+          .update('blocks', blocks => blocks.push(block))
+
+        return distributeReward({state : acc, adjacencyMatrix : matrix, block, getNodeFee})
+
+  }, state)
 }

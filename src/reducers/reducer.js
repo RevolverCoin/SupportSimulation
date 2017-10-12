@@ -18,9 +18,11 @@ export default (state = INITIAL_STATE, action) => {
         case actions.UPDATE_AUTHORS_SUPPORT_PROBABILITY :
             return core.updateAuthorsSupportProbability(state);
 
-
         case actions.UPDATE_POS_BLOCK_PROBABILITY :
             return core.updatePOSBlockProbability(state);
+
+        case actions.GENERATE_BLOCKS:
+          return core.generateBlocks(state, action.data.nodes, action.data.supporterFee, action.data.authorFee )
 
         case actions.GENERATE_POS_BLOCK:
             return core.generatePOSBlock(state, action.data.count, 10, action.data.nodeId, action.data.supporterFee, action.data.authorFee)
@@ -41,7 +43,7 @@ export default (state = INITIAL_STATE, action) => {
             return statistics.clearStatistics(state)
 
         case actions.ADD_STATISTICS_RAW:
-            return statistics.addStatisticsRaw(state, action.data.round, action.data.state, action.data.mag, action.data.dens)
+            return statistics.addStatisticsRaw(state, action.data)
 
         case actions.COMPUTE_STATISTICS:
             return statistics.computeStatistics(state)
