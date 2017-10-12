@@ -1,7 +1,18 @@
-import {getAdjacentNodes, createAdjacencyMatrix, unsetAdjacencyMatrixIndices, isTerminal} from "./utils";
+import {
+    getAdjacentNodes,
+    getAdjacentNodesSet as getAdjSet,
+    createAdjacencyMatrix,
+    unsetAdjacencyMatrixIndices,
+    isTerminal,
+    getChildren,
+    getParents
+} from "./utils";
 import * as NodeType from "../constants/NodeType";
-import {fromJS, List, Map} from 'immutable'
-
+import {fromJS, List, Set, Map} from 'immutable'
+const memoize = require('memoizee');
+//const memoize = require('memoize-immutable');
+var memProfile = require('memoizee/profile');
+const getAdjacentNodesSet = memoize(getAdjSet, { profileName: 'getAdjacentNodesSet' })
 
 /**
  *
@@ -14,6 +25,7 @@ import {fromJS, List, Map} from 'immutable'
  * @returns {{reward: (*|Map<any, any>|Map<string, any>|R), outputRewardMap: (*|Map<any, any>|Map<string, any>|R), adjacentNodes: *, matrix: *}}
  */
 function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType, authorFee, supporterFee}) {
+
     //get adjacent  nodes
     const adjacentNodes = getAdjacentNodes(node, matrix)
 
@@ -22,8 +34,8 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
     const normalizedWeight = weights.map(p => p / sum)
 
     const updatedMatrix = adjacentNodes && adjacentNodes.size ? (
-            unsetAdjacencyMatrixIndices(matrix, true, ...adjacentNodes.map(nodeId => ({target: nodeId, source: node})))
-        ) : matrix
+        unsetAdjacencyMatrixIndices(matrix, true, ...adjacentNodes.map(nodeId => ({target: nodeId, source: node})))
+    ) : matrix
 
 
     //reward stream from @node to adjacentNodes nodes
@@ -42,7 +54,7 @@ function rewardNodes({node, matrix, inputReward, height, getWeights, getNodeType
 
     const outputReward = edgeReward.map((reward, index) => {
         const nodeId = adjacentNodes.get(index);
-        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? authorFee: supporterFee)
+        const fee = (getNodeType(nodeId) === NodeType.AUTHOR ? authorFee : supporterFee)
         return reward * (1 - fee)
     })
 
@@ -74,10 +86,10 @@ function processNodes(nodes,
     let curMatrix = matrix;
 
     const getWeights = (nodes) => nodes.map(nodeId => {
-            if (getNodeType(nodeId) === NodeType.AUTHOR) {
-                return getAdjacentNodes(nodeId, matrix).size;
-            }
-            return 1 / nodes.size
+            // if (getNodeType(nodeId) === NodeType.AUTHOR) {
+            //     return getAdjacentNodes(nodeId, matrix).size;
+            // }
+            return 1
         }
     );
 
@@ -135,12 +147,18 @@ function processNodes(nodes,
         return processNodes(processedNodes, curMatrix, mergedInputReward, mergedReward, getNodeType, authorFee, supporterFee, ++waveIndex, updatedMinDistToGen)
     }
 
-
     return {mergedReward, minDistToGenerator: updatedMinDistToGen}
 }
 
-
-export function distributeReward(state, block, getNodeType, authorFee, supporterFee) {
+/**
+ * stream distribution
+ * @param {*} state 
+ * @param {*} block 
+ * @param {*} getNodeType 
+ * @param {*} authorFee 
+ * @param {*} supporterFee 
+ */
+export function distributeReward2({state, block, getNodeType, authorFee, supporterFee}) {
     const finder = block.get("finderId");
     const matrix = createAdjacencyMatrix(state.get("edges"));
     const inputReward = Map().set(finder, block.get("subsidy"));
@@ -153,5 +171,79 @@ export function distributeReward(state, block, getNodeType, authorFee, supporter
             const hasRewardUpdate = mergedReward.has(n.get('id'));
             return hasRewardUpdate ? n.update("reward", 0, r => r + mergedReward.get(n.get('id'))) : n
         }));
-    //   .update ("nodes", nodes=>nodes.map(n=>n.update("label","",l=>''+n.get("reward"))))
+}
+
+
+/**
+ * breadth first search based traversal
+ * @param {*} matrix adjacency matrix
+ * @param {*} startNode id of starting node
+ * @param {*} visitFn function to be called for each node with following params
+ *  (nodeId, parents, parentChildren : map <nodeId, children> of prev nodes)
+ */
+function bfs(matrix, startNode, visitFn) {
+    const listToExplore = [startNode];
+    let visited = Set.of(startNode)
+    let parentChildren = Map()
+
+    do {
+      const nodeIndex = listToExplore.shift();
+      const nodeChildren = getAdjacentNodesSet(nodeIndex, matrix).subtract(visited)
+      //populate parent->children map to determine number of outputs for each parents later
+      parentChildren =   parentChildren.update(nodeIndex, n=>n ? n : nodeChildren)
+      parentChildren = nodeChildren.reduce( (acc,next)=>{
+        return acc.update(next, r=>r ? r :  getAdjacentNodesSet(next, matrix).subtract(visited))
+      }, parentChildren)
+
+      nodeChildren.forEach(childId => {
+          visited = visited.add(childId);
+          listToExplore.push(childId)
+          const adjacent = getAdjacentNodesSet(childId, matrix)
+          visitFn(childId, adjacent.intersect(visited), parentChildren)
+      })
+    }
+    while(listToExplore.length > 0 && visited.size < matrix.size)
+};
+
+/**
+ * BFS based distribution
+ * @param {*} param0 
+ */
+export function distributeReward({state, adjacencyMatrix, block, getNodeFee}) {
+    const matrix = adjacencyMatrix || createAdjacencyMatrix(state.get("edges"));
+
+    const finder = block.get("finderId");
+    //reward of each node
+    let reward = Map().set(finder, block.get("subsidy") * getNodeFee(finder));
+    //total output reward for each node
+    let outReward = Map().set(finder, block.get("subsidy") * (1 -  getNodeFee(finder)));
+
+    const mergeReward = (nodeId, parents, parentChildren) => {
+        //cumulative node reward
+        const nodeReward = parents.reduce((acc, next) => {
+          const children =  parentChildren.get(next)
+          const childrenCount =  children && children.size || 1
+          return acc +  outReward.get(next) / childrenCount
+        },0)
+
+        const fee = getNodeFee(nodeId)
+        //reward that belongs to node
+        reward = reward.set(nodeId, nodeReward * fee)
+        //out reward
+        outReward = outReward.set(nodeId, nodeReward * (1 - fee))
+    }
+
+    console.time("bfs");
+    bfs(matrix, finder, mergeReward)
+    console.timeEnd("bfs");
+
+    return state
+        .set("minDistToGenerator", List())
+        .update("nodes", nodes => nodes.map(n => {
+            const hasRewardUpdate = reward.has(n.get('id'));
+            return hasRewardUpdate ? n.update("reward", 0, r => {
+               const rounded  =  Math.round(100000000* reward.get(n.get('id')))/100000000
+               return r + rounded
+            }) : n
+        }));
 }
