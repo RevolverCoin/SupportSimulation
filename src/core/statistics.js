@@ -1,10 +1,11 @@
 import {List, fromJS, Map, Range} from 'immutable'
+
 const json2csv = require('json2csv');
 import downloadCsv from 'download-csv';
 
 
 import {getNodeOfType} from './core'
-import {createAdjacencyMatrix, getAdjacentNodes} from './utils'
+import {createAdjacencyMatrix, listAverage, getAdjacentNodes} from './utils'
 import * as NodeType from "../constants/NodeType";
 
 
@@ -12,43 +13,50 @@ export function clearStatistics(state) {
     return state.delete('statistics')
 }
 
-export function addStatisticsRaw(state, round, data, mag, dens) {
-    return state.updateIn(['statistics', 'raw'], List(), raw => raw.push(fromJS({round, mag, dens, data})))
+export function addStatisticsRaw(state, data) {
+    return state.updateIn(['statistics', 'raw'], List(), raw => raw.push(fromJS(data)))
 }
 
 export function computeStatistics(state) {
     const getNodesAvgReward = (matrix, nodes, totalReward) => {
+        nodes = nodes.filter(n=>!!n.get('reward'))
         //calculate rewards for each node of specified degree
         const avg = nodes.reduce((acc, next) => {
             const adjCount = getAdjacentNodes(next.get('id'), matrix).size
-            const reward = (next.get('reward') || 0 ) / totalReward
-
+            const reward = (next.get('reward') || 0 )
             return acc.update(adjCount, List(), l => l.push(reward))
         }, Map())
 
 
-        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / totalReward * list.size
-
-        return avg.keySeq().reduce((acc, next) => {
+        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / list.size
+        const result = avg.keySeq().reduce((acc, next) => {
             return acc.set(next, getAvg(avg.get(next)))
         }, Map())
+        console.log(totalReward, nodes, result)
+        return result;
     }
 
     /**
      * averages results of all samples of the round
      */
     const calcSamplesAverage = (round) => {
+        console.log(round)
+        //calcs total reward for specified nodes
+        const getTotalReward = (rewards) => rewards ? (rewards.keySeq().reduce((acc, next) => {
+            return acc + (List.isList(rewards.get(next)) ? rewards.get(next).reduce((a, n) => a + n||0, 0) : rewards.get(next)||0)
+        }, 0)):0
 
-        const calcAvg = (rewards) => rewards.keySeq().reduce((acc, next) => {
+        const calcAvg = (rewards) => rewards ? rewards.keySeq().reduce((acc, next) => {
             return acc.set(next, List.isList(rewards.get(next)) ? (
                     rewards.get(next).reduce((a, n) => a + n, 0) / rewards.get(next).size
                 ) : (
                     rewards.get(next)
                 )
             )
-        }, Map())
+        }, Map()) : Map()
 
-        return round
+
+        const result = round
             .reduce((acc, next) => {
 
                 const merger = (oldVal, newVal) => {
@@ -59,15 +67,29 @@ export function computeStatistics(state) {
                 return acc
                     .set('mag', next.get('mag'))
                     .set('dens', next.get('dens'))
+                    .set('pGen', next.get('pGen'))
+                    .set('pAuth', next.get('pAuth'))
+                    .set('sampleSize',  next.get('sampleSize') )
+                    .update('realDensity', List(), d => d.push(next.get('realDensity')))
                     .update('avgAuthorsRewardList', Map(), map => next.get('avgAuthorsRewardList').mergeWith(merger, map))
                     .update('avgSupportersRewardList', Map(), map => next.get('avgSupportersRewardList').mergeWith(merger, map))
                     .update('avgGeneratorsRewardList', Map(), map => next.get('avgGeneratorsRewardList').mergeWith(merger, map))
                     .update('minDistToGenerator', Map(), map => next.get('minDistToGenerator').mergeWith(merger, map))
             }, Map())
-            .update('avgAuthorsRewardList', l => calcAvg(l))
+
+        const authorsReward = getTotalReward(result.get('avgAuthorsRewardList'))
+        const supportersReward = getTotalReward(result.get('avgSupportersRewardList'))
+        const generatorsReward = getTotalReward(result.get('avgGeneratorsRewardList'))
+        const roundDistributedReward = authorsReward + supportersReward + generatorsReward;
+
+        return result.update('avgAuthorsRewardList', l => calcAvg(l))
             .update('avgSupportersRewardList', l => calcAvg(l))
             .update('avgGeneratorsRewardList', l => calcAvg(l))
+            .set('authorsReward', authorsReward/roundDistributedReward)
+            .set('supportersReward', supportersReward/roundDistributedReward)
+            .set('generatorsReward', generatorsReward/roundDistributedReward)
             .update('minDistToGenerator', l => calcAvg(l))
+            .update('realDensity', l => Math.round(1000 * listAverage(l)) / 1000)
     }
 
 
@@ -77,12 +99,17 @@ export function computeStatistics(state) {
     const result = state
         .getIn(['statistics', 'raw'])
         .reduce((acc, entry) => {
+            console.log(entry)
             const mag = entry.get('mag')
             const dens = entry.get('dens')
             const round = entry.get('round')
+            const pAuth = entry.get('pAuth')
+            const pGen = entry.get('pGen')
+            const sampleSize = entry.get('sampleSize')
             const stateSnapshot = entry.get('data')
 
-            const roundDistributedReward = stateSnapshot.get('nodes').reduce((acc, next) => acc + (next.get('reward') || 0), 0)
+            const getTotalReward = nodes => nodes.reduce((acc, next) => acc + (next.get('reward') || 0), 0)
+
 
 
             const matrix = createAdjacencyMatrix(stateSnapshot.get('edges'))
@@ -91,14 +118,29 @@ export function computeStatistics(state) {
             const supporters = getNodeOfType(stateSnapshot, NodeType.SUPPORTER)
             const generators = getNodeOfType(stateSnapshot, NodeType.GENERATOR)
 
+            const authorsReward = getTotalReward(authors)
+            const supportersReward = getTotalReward(supporters)
+            const generatorsReward = getTotalReward(generators)
+
+            console.log("total reward for round : ", getTotalReward(stateSnapshot.get('nodes')))
+            console.log("authorsReward : ", authorsReward)
+            console.log("supportersReward : ", supportersReward)
+            console.log("generatorsReward : ", generatorsReward)
+
+            const roundDistributedReward = authorsReward + supportersReward + generatorsReward;
+
 
             return acc.update(wave++, Map(), val => val
                 .set('round', round)
                 .set('mag', mag)
                 .set('dens', dens)
+                .set('pGen', pGen)
+                .set('pAuth', pAuth)
+                .set('sampleSize', sampleSize)
                 .set('avgAuthorsRewardList', getNodesAvgReward(matrix, authors, roundDistributedReward))
                 .set('avgSupportersRewardList', getNodesAvgReward(matrix, supporters, roundDistributedReward))
                 .set('avgGeneratorsRewardList', getNodesAvgReward(matrix, generators, roundDistributedReward))
+                .set('realDensity', 2 * stateSnapshot.get('edges').size / (mag * (mag - 1)))
                 .set('minDistToGenerator', stateSnapshot.get('minDistToGenerator'))
             )
         }, Map())
