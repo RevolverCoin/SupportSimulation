@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {Provider} from "react-redux";
 import {fromJS} from "immutable";
 
-import {graph1} from './constants/GraphData'
+import {graph1} from './data/data'
 
 import "./App.css";
 import Graph from "./containers/graphVIS";
@@ -60,7 +60,6 @@ class App extends Component {
 
     onGenBlock() {
         store.dispatch(generatePOSBlockByIndex(1, this.currenGenIndex++, 0.1,0.5));
-     //   store.dispatch(generatePOSBlock(1));
         store.dispatch(updateStructure());
 
         this.setState({blockId: this.state.blockId + 1});
@@ -75,7 +74,7 @@ class App extends Component {
     }
 
     onLaunchSimulation() {
-        //store.dispatch(restart());
+        store.dispatch(restart());
         store.dispatch(setCreateSimulationModalOpen(true))
     }
 
