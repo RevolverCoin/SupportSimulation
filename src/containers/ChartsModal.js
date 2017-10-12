@@ -10,28 +10,16 @@ import {Range} from 'immutable'
 import {setChartsModalOpen, setChartsPopupIteration} from '../actions/actions'
 import RewardChart from '../components/RewardChart'
 
-
-function prepareD3Data(maxSupportCount, authorsReward, supportersReward, generatorsReward) {
+function prepareD3Data(maxSupportCount, reward) {
     //create range object to iterate over the reward data to be sure output arrays all have equal number of points
-    const range = Range(0, maxSupportCount)
-    return [
-        {
-            "name": "Authors reward",
-            "values": range.map(key => ([key, authorsReward.get(key) || 0])).toJS(),
-        },
+    const range = Range(0, maxSupportCount + 1)
+    return {
+        name:"reward",
+        values:reward.keySeq().sort().map(key => ([key, reward.get(key) || 0])).toJS()
+    }
 
-        {
-            "name": "Supporters reward",
-            "values": range.map(key => ([key, supportersReward.get(key) || 0])).toJS()
-        },
-
-
-        {
-            "name": "Generators reward",
-            "values": range.map(key => ([key, generatorsReward.get(key) || 0])).toJS()
-        }
-    ];
 }
+
 
 
 function mapChartStateToProps(state) {
@@ -45,11 +33,18 @@ function mapChartStateToProps(state) {
         authorsRewardRaw.keySeq().sort().last() || 0,
         supportersReward.keySeq().sort().last() || 0)
 
-    const d3data = authorsRewardRaw && prepareD3Data(maxSupportCount, authorsRewardRaw, supportersReward, generatorsReward);
 
     return {
         isOpen: state.get('isChartsModalOpen'),
-        reward: d3data
+        generators: [
+            prepareD3Data(maxSupportCount, generatorsReward)
+        ],
+        supporters: [
+            prepareD3Data(maxSupportCount, supportersReward),
+        ],
+        authors:[
+            prepareD3Data(maxSupportCount, authorsRewardRaw)
+        ]
     }
 
 }
@@ -65,7 +60,15 @@ class ChartsModal extends Component {
     render() {
         const {isOpen, data, onCancel, iterations, iteration, setChartsPopupIteration} = this.props;
 
-        const iterationDesc = data ? `${iteration.toString()} (nodes : ${data.getIn([iteration, 'mag'])}, density : ${data.getIn([iteration, 'dens'])})` : 'no iteration data'
+        if (!isOpen || !data) return null;
+
+        const currentIteration = data.get(iteration);
+        const pGen = currentIteration.get('pGen')
+        const pAuth =currentIteration.get('pAuth')
+        const pSup = 1 - pGen - pAuth
+
+
+        const iterationDesc = data && currentIteration ? `${iteration.toString()} (nodes : ${currentIteration.get('mag')}, density : ${currentIteration.get('dens')}, samples:${currentIteration.get('sampleSize')})` : 'no iteration data'
 
         return (
             <Modal
@@ -81,6 +84,21 @@ class ChartsModal extends Component {
                 <p>Select iteration</p>
                 <Dropdown options={iterations} value={iterationDesc} onChange={setChartsPopupIteration}
                           placeholder="Select iteration"/>
+                <div>
+                    <ul>
+                        <li>n : {currentIteration.get('mag')}</li>
+                        <li>γ1(pGen) : {pGen}</li>
+                        <li>γ2(pAuth) : {pAuth}</li>
+                        <li>γ3(pSup) : {pSup}</li>
+
+                        <li>Real avg density : {currentIteration.get('realDensity')}</li>
+
+                        <li>authors reward : {100*currentIteration.get('authorsReward')}</li>
+                        <li>supporters reward : {100*currentIteration.get('supportersReward')}</li>
+                        <li>generators reward : {100*currentIteration.get('generatorsReward')}</li>
+
+                    </ul>
+                </div>
                 <RewardChartContainer/>
                 <button onClick={onCancel}>OK</button>
             </Modal>
@@ -103,15 +121,15 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
     return {
-        onClose(){
+        onClose() {
             dispatch(setChartsModalOpen(false));
         },
 
-        onCancel(){
+        onCancel() {
             dispatch(setChartsModalOpen(false))
         },
 
-        setChartsPopupIteration(iteration){
+        setChartsPopupIteration(iteration) {
             if (iteration) {
                 dispatch(setChartsPopupIteration(parseInt(iteration.value)))
             }
@@ -120,4 +138,4 @@ function mapDispatchToProps(dispatch) {
     }
 }
 
-export default  connect(mapStateToProps, mapDispatchToProps)(ChartsModal)
+export default connect(mapStateToProps, mapDispatchToProps)(ChartsModal)
