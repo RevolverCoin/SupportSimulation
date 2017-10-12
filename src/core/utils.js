@@ -1,11 +1,14 @@
-import {Range, List} from 'immutable'
+import {List, Range,Set,fromJS} from 'immutable'
 
 export function getRandomInt(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min)) + min;
+    min = Math.floor(min);
+    max = Math.ceil(max);
+    return min>=max ? max : Math.floor(Math.random() * (max - min)) + min;
 }
 
+export function listAverage(list) {
+    return list.reduce((acc, next) => acc + next, 0) /  list.size
+}
 
 /**
  * returns @count uniformly distributed numbers that add to 1
@@ -25,7 +28,6 @@ export function createProbabilityTable(probs) {
 
 export function createAdjacencyMatrix(edges) {
     return edges.reduce((acc, next) => {
-        console.log()
         return acc.update(next.get('source'), List(), val => (val || List()).set(next.get('target'), 1));
     }, List())
 }
@@ -40,6 +42,13 @@ export function getAdjacentNodes(nodeId, matrix) {
     return rowNodes.concat(colNodes)
 }
 
+export function getAdjacentNodesSet(nodeId, matrix) {
+    const rowNodes = matrix.get(nodeId) ? matrix.get(nodeId).reduce((acc, next, index) => next ? acc.add(index) : acc, Set()) : Set();
+    const colNodes = matrix.reduce((acc, next, index) => next && next.get(nodeId) ? acc.add(index) : acc, Set())
+    return rowNodes.concat(colNodes)
+}
+
+
 export function isSet(matrix, source, target) {
     return matrix.hasIn([source, target])
 }
@@ -50,11 +59,21 @@ export function isSet(matrix, source, target) {
  */
 export function unsetAdjacencyMatrixIndices(matrix, bidirectional, ...indices) {
     const safeDelete = (map, s, t) => map.hasIn([s, t]) ? map.setIn([s, t], undefined) : map
-    console.log()
-    return indices.reduce((acc, idx) => {
-        let res = safeDelete(acc, idx.source, idx.target)
-        return bidirectional ? safeDelete(res, idx.target, idx.source) : res
-    }, matrix);
+   return matrix.withMutations(mutable=>{
+       indices.forEach(idx=>{
+           safeDelete(mutable, idx.source, idx.target)
+           bidirectional&&safeDelete(mutable, idx.target, idx.source)
+       })
+   })
+}
+
+export function unsetAdjacencyMatrixIndices2(matrix, bidirectional, ...indices) {
+        const safeDelete = (map, s, t) => map.hasIn([s, t]) ? map.setIn([s, t], undefined) : map
+
+        return indices.reduce((acc, idx) => {
+            let res = safeDelete(acc, idx.source, idx.target)
+            return bidirectional ? safeDelete(res, idx.target, idx.source) : res
+        }, matrix);
 }
 
 
