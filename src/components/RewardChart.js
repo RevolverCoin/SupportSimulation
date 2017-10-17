@@ -1,15 +1,20 @@
 'use strict'
 
 import React from 'react'
-import {AreaChart} from 'rd3'
+import {AreaChart, BarChart} from 'rd3'
+
+
+const ChartComponent = (props) => {
+    console.log (props.data && props.data[0].values.length < 20)
+    return props.data && props.data[0].values.length < 20 ? <BarChart {...props} />: <AreaChart {...props}/>
+}
 
 const RewardChart = ({generators, supporters, authors}) => {
     const commonMultiplier = 100
-    console.log(generators, supporters, authors, authors[0].values.reduce((acc, next) => acc +parseFloat(next), 0))
     return (
         <div className="charts">
             <div>
-                <AreaChart
+                <ChartComponent
                     grouped={true}
                     data={generators}
                     width={"100%"}
@@ -34,7 +39,7 @@ const RewardChart = ({generators, supporters, authors}) => {
             </div>
 
             <div>
-                <AreaChart
+                <ChartComponent
                     data={supporters}
                     title="supporters"
                     width={"100%"}
@@ -58,7 +63,7 @@ const RewardChart = ({generators, supporters, authors}) => {
             </div>
 
             <div>
-                <AreaChart
+                <ChartComponent
                     data={authors}
                     title="authors"
                     width={"100%"}
