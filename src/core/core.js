@@ -243,7 +243,7 @@ export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
     const allAuthors = getAuthors(state).map(a=>a.get('id')).toSet()
 
     //returns random author node id based on probability table
-    const getRandomAuthor = (table) => table.get( Math.round(Math.random()*table.size))
+    const getRandomAuthor = (table) => table.get( Math.floor(Math.random()*table.size))
     return state.update('edges', edges => {
         let result = edges;
 
@@ -345,9 +345,9 @@ function createBlock(state, subsidy, nodeId, supporterFee, authorFee) {
 
     state = state.update(['sim', 'totalReward'], val => val + block.get('blockReward'));
 
-    const getNodeFee =createGetNodeFeeFunc(state.get('nodes'))
+    const getNodeFee =createGetNodeFeeFunc(state.get('nodes'), authorFee, supporterFee)
 
-    return distributeReward({state : state.update('blocks', blocks => blocks.push(block)), block, getNodeFee, authorFee, supporterFee})
+    return distributeReward({state : state.update('blocks', blocks => blocks.push(block)), block, getNodeFee})
 }
 
 export function generatePOSBlock(state, count, subsidy, nodeId, supporterFee, authorFee) {
