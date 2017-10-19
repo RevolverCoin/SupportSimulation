@@ -93,9 +93,9 @@ class ChartsModal extends Component {
 
                         <li>Real avg density : {currentIteration.get('realDensity')}</li>
 
-                        <li>authors reward : {100*currentIteration.get('authorsReward')}</li>
-                        <li>supporters reward : {100*currentIteration.get('supportersReward')}</li>
-                        <li>generators reward : {100*currentIteration.get('generatorsReward')}</li>
+                        <li>authors reward : {100*currentIteration.get('authorsReward')}%</li>
+                        <li>supporters reward : {100*currentIteration.get('supportersReward')}%</li>
+                        <li>generators reward : {100*currentIteration.get('generatorsReward')}%</li>
 
                     </ul>
                 </div>
