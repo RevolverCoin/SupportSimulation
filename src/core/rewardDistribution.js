@@ -8,7 +8,7 @@ import {
     getParents
 } from "./utils";
 import * as NodeType from "../constants/NodeType";
-import {fromJS, List, Set, Map} from 'immutable'
+import {fromJS, List, Set, Map, Range} from 'immutable'
 const memoize = require('memoizee');
 //const memoize = require('memoize-immutable');
 var memProfile = require('memoizee/profile');
@@ -205,16 +205,18 @@ function bfs(matrix, startNode, visitFn) {
     while(listToExplore.length > 0 && visited.size < matrix.size)
 };
 
+
+
 /**
  * BFS based distribution
  * @param {*} param0 
  */
-export function distributeReward({state, adjacencyMatrix, block, getNodeFee}) {
+export function distributeReward({state, adjacencyMatrix, block, getNodeFee, rewardFinder = true}) {
     const matrix = adjacencyMatrix || createAdjacencyMatrix(state.get("edges"));
 
     const finder = block.get("finderId");
     //reward of each node
-    let reward = Map().set(finder, block.get("subsidy") * getNodeFee(finder));
+    let reward = Map().set(finder, rewardFinder ? block.get("subsidy") * getNodeFee(finder) : 0);
     //total output reward for each node
     let outReward = Map().set(finder, block.get("subsidy") * (1 -  getNodeFee(finder)));
 
@@ -235,6 +237,7 @@ export function distributeReward({state, adjacencyMatrix, block, getNodeFee}) {
 
     bfs(matrix, finder, mergeReward)
 
+
     return state
         .set("minDistToGenerator", List())
         .update("nodes", nodes => nodes.map(n => {
@@ -244,4 +247,11 @@ export function distributeReward({state, adjacencyMatrix, block, getNodeFee}) {
                return r + rounded
             }) : n
         }));
+}
+
+/**
+ * cleares an existing getAdjacentNode memoizee cache
+ */
+export function clearAdjMatrixMemoizeCache(){
+    getAdjacentNodesSet && getAdjacentNodesSet.clear()
 }
