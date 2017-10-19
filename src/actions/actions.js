@@ -4,6 +4,7 @@ import {Range} from 'immutable'
 import * as NodeType from "../constants/NodeType";
 
 import {dumpCSV, postProcess} from '../core/statistics'
+import {clearAdjMatrixMemoizeCache} from '../core/rewardDistribution'
 
 export function createAuthor(count) {
     return {
@@ -152,6 +153,7 @@ export function createSimulation({
 
                     console.timeEnd("simulation");
                     dispatch(addStatistics({sampleSize, round, mag, dens, pGen, pAuth}))
+                    clearAdjMatrixMemoizeCache()
                     console.log(`added statistics for round ${round}, sample : ${currentSample}`)
                     if (!useCurrentNetwork) {
                         dispatch(resetState())
