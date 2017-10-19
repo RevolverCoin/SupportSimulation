@@ -29,12 +29,6 @@ export function addStatisticsRaw(state, data) {
     return state.updateIn(['statistics', 'raw'], List(), raw => raw.push(computedRoundStatisics))
 }
 
-
-export function addRoundStatistics (state, roundData){
-//    const computedRoundStatisics = processRound(roundData)
-//    return state.setIn(['statistics', 'raw'], result)
-}
-
 export function processRound(roundData) {
     const getNodesAvgReward = (matrix, nodes, totalReward) => {
         nodes = nodes.filter(n => !!n.get('reward'))
