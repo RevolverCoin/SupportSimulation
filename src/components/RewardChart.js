@@ -4,11 +4,7 @@ import React from 'react'
 import {AreaChart, BarChart} from 'rd3'
 
 
-const ChartComponent = (props) => {
-    console.log (props.data && props.data[0].values.length < 20)
-    return props.data && props.data[0].values.length < 20 ? <BarChart {...props} />: <AreaChart {...props}/>
-}
-
+const ChartComponent = (props) => props.data && props.data[0].values.length <= 2 ? <BarChart {...props} />: <AreaChart {...props}/>
 const RewardChart = ({generators, supporters, authors}) => {
     const commonMultiplier = 100
     return (
