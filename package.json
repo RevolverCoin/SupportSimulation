@@ -2,20 +2,23 @@
   "name": "sim-client",
   "version": "0.1.0",
   "private": true,
+  "homepage": "./",
   "main": "src/electron-starter.js",
+  "description": "revolver simulation client",
+  "author": "revolver team",
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-immutable": "^1.6.0",
     "electron": "^1.7.9",
+    "electron-builder": "^19.47.1",
     "mocha": "^3.2.0",
     "react-scripts": "0.7.0",
     "remote-redux-devtools": "^0.5.0"
   },
   "dependencies": {
-    "copy-to-clipboard": "^3.0.8",
     "d3": "^3.5.17",
-    "distributions-truncated-normal-pdf": "0.0.0",
     "download-csv": "^1.1.1",
+    "electron-is-dev": "^0.3.0",
     "fixed-data-table": "^0.6.3",
     "graphlib": "^2.1.1",
     "immutable": "3.8.1",
@@ -33,10 +36,11 @@
     "react-sigma": "^1.2.17",
     "react-vis-force": "^0.1.4",
     "redux": "^3.6.0",
-    "redux-thunk": "^2.2.0",
-    "stochasm": "^0.5.0"
+    "redux-thunk": "^2.2.0"
   },
   "scripts": {
+    "pack": "build --dir",
+    "dist": "npm run build && build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
@@ -44,5 +48,11 @@
     "eject": "react-scripts eject",
     "electron": "electron .",
     "test-win": "mocha --compilers js:babel-core/register --require ./test/test_helper.js --recursive"
+  },
+  "build": {
+    "appId": "com.electron.xresim",
+    "directories": {
+      "buildResources": "public"
+    }
   }
 }
