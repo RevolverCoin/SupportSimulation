@@ -30,21 +30,27 @@ export function addStatisticsRaw(state, data) {
 }
 
 export function processRound(roundData) {
-    const getNodesAvgReward = (matrix, nodes, totalReward) => {
-        nodes = nodes.filter(n => !!n.get('reward'))
+  
+    const getNodesAvgRewardAndDegrees = (matrix, nodes, totalReward) => {
         //calculate rewards for each node of specified degree
-        const avg = nodes.reduce((acc, next) => {
+        //and also node count of each degree
+        const nodeInfo = nodes.reduce((acc, next) => {
             const adjCount = getAdjacentNodes(next.get('id'), matrix).size
             const reward = (next.get('reward') || 0)
-            return acc.update(adjCount, List(), l => l.push(reward))
-        }, Map())
+            //filter nodes with 0 reward
+            if (!reward) return acc;
+            return acc
+            .updateIn(['reward',adjCount], List(), l => !!reward? l.push(reward):l)
+            .updateIn(['nodeDegrees',adjCount], 0, l => ++l)
+            .updateIn(['rewardDistr',Math.round(reward*10)], 0, l => ++l)
+        }, fromJS({reward:Map(), rewardDistr : Map(), nodeDegrees : Map()}), )
 
 
-        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / list.size
-        const result = avg.keySeq().reduce((acc, next) => {
-            return acc.set(next, getAvg(avg.get(next)))
+        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / (totalReward*list.size)
+        const reward = nodeInfo.get('reward').keySeq().reduce((acc, next) => {
+            return acc.set(next, getAvg(nodeInfo.getIn(['reward',next])))
         }, Map())
-        return result;
+        return {reward, nodeDegrees : nodeInfo.get('nodeDegrees'), rewardDistr : nodeInfo.get('rewardDistr')};
     }
 
     const mag = roundData.get('mag')
@@ -67,7 +73,7 @@ export function processRound(roundData) {
     const supportersReward = getTotalReward(supporters)
     const generatorsReward = getTotalReward(generators)
     const roundDistributedReward = authorsReward + supportersReward + generatorsReward;
-
+    
     return fromJS({
         round,
         mag,
@@ -75,9 +81,9 @@ export function processRound(roundData) {
         pGen,
         pAuth,
         sampleSize,
-        avgAuthorsRewardList: getNodesAvgReward(matrix, authors, roundDistributedReward),
-        avgSupportersRewardList: getNodesAvgReward(matrix, supporters, roundDistributedReward),
-        avgGeneratorsRewardList: getNodesAvgReward(matrix, generators, roundDistributedReward),
+        avgAuthorsRewardList: getNodesAvgRewardAndDegrees(matrix, authors, roundDistributedReward),
+        avgSupportersRewardList: getNodesAvgRewardAndDegrees(matrix, supporters, roundDistributedReward),
+        avgGeneratorsRewardList: getNodesAvgRewardAndDegrees(matrix, generators, roundDistributedReward),
         realDensity: 2 * stateSnapshot.get('edges').size / (mag * (mag - 1)),
         minDistToGenerator: stateSnapshot.get('minDistToGenerator')
     })
@@ -86,23 +92,6 @@ export function processRound(roundData) {
 
 
 export function computeStatistics(state) {
-    const getNodesAvgReward = (matrix, nodes, totalReward) => {
-        nodes = nodes.filter(n => !!n.get('reward'))
-        //calculate rewards for each node of specified degree
-        const avg = nodes.reduce((acc, next) => {
-            const adjCount = getAdjacentNodes(next.get('id'), matrix).size
-            const reward = (next.get('reward') || 0)
-            return acc.update(adjCount, List(), l => l.push(reward))
-        }, Map())
-
-
-        const getAvg = (list) => list.reduce((acc, next) => acc + next, 0) / list.size
-        const result = avg.keySeq().reduce((acc, next) => {
-            return acc.set(next, getAvg(avg.get(next)))
-        }, Map())
-        return result;
-    }
-
     /**
      * averages results of all samples of the round
      */
@@ -112,11 +101,11 @@ export function computeStatistics(state) {
             return acc + (List.isList(rewards.get(next)) ? rewards.get(next).reduce((a, n) => a + n || 0, 0) : rewards.get(next) || 0)
         }, 0)) : 0
 
-        const calcAvg = (rewards) => rewards ? rewards.keySeq().reduce((acc, next) => {
+        const calcAvg = (rewards, size) => rewards ? rewards.keySeq().reduce((acc, next) => {
             return acc.set(next, List.isList(rewards.get(next)) ? (
-                rewards.get(next).reduce((a, n) => a + n, 0) / rewards.get(next).size
+                rewards.get(next).reduce((a, n) => a + n, 0) / (size || rewards.get(next).size)
             ) : (
-                rewards.get(next)
+                rewards.get(next) / (size || 1)
             ))
         }, Map()) : Map()
 
@@ -129,16 +118,20 @@ export function computeStatistics(state) {
                     return oldVal ? result.push(oldVal) : result
                 }
 
+           
                 return acc
                     .set('mag', next.get('mag'))
                     .set('dens', next.get('dens'))
                     .set('pGen', next.get('pGen'))
                     .set('pAuth', next.get('pAuth'))
+                    .set('supToGenActivity', next.get('supToGenActivity'))
                     .set('sampleSize', next.get('sampleSize'))
                     .update('realDensity', List(), d => d.push(next.get('realDensity')))
-                    .update('avgAuthorsRewardList', Map(), map => next.get('avgAuthorsRewardList').mergeWith(merger, map))
-                    .update('avgSupportersRewardList', Map(), map => next.get('avgSupportersRewardList').mergeWith(merger, map))
-                    .update('avgGeneratorsRewardList', Map(), map => next.get('avgGeneratorsRewardList').mergeWith(merger, map))
+                    .update('authorNodesDegree', Map(), map =>next.getIn(['avgAuthorsRewardList','nodeDegrees']).mergeWith(merger, map))
+                    .update('authorRewardDistr', Map(), map =>next.getIn(['avgAuthorsRewardList','rewardDistr']).mergeWith(merger, map))
+                    .update('avgAuthorsRewardList', Map(), map => next.getIn(['avgAuthorsRewardList','reward']).mergeWith(merger, map))
+                    .update('avgSupportersRewardList', Map(), map => next.getIn(['avgSupportersRewardList','reward']).mergeWith(merger, map))
+                    .update('avgGeneratorsRewardList', Map(), map => next.getIn(['avgGeneratorsRewardList','reward']).mergeWith(merger, map))
                     .update('minDistToGenerator', Map(), map => next.get('minDistToGenerator').mergeWith(merger, map))
             }, Map())
 
@@ -146,15 +139,17 @@ export function computeStatistics(state) {
         const supportersReward = getTotalReward(result.get('avgSupportersRewardList'))
         const generatorsReward = getTotalReward(result.get('avgGeneratorsRewardList'))
         const roundDistributedReward = authorsReward + supportersReward + generatorsReward;
-
+        console.log('authorNodesDegree',result.get('authorNodesDegree').toJS())
         return result.update('avgAuthorsRewardList', l => calcAvg(l))
             .update('avgSupportersRewardList', l => calcAvg(l))
             .update('avgGeneratorsRewardList', l => calcAvg(l))
+            .set('authorNodesDegree', calcAvg(result.get('authorNodesDegree'),1))
+            .set('authorRewardDistr', calcAvg(result.get('authorRewardDistr'),1))
             .set('authorsReward', authorsReward / roundDistributedReward)
             .set('supportersReward', supportersReward / roundDistributedReward)
             .set('generatorsReward', generatorsReward / roundDistributedReward)
             .update('minDistToGenerator', l => calcAvg(l))
-            .update('realDensity', l => Math.round(1000 * listAverage(l)) / 1000)
+            .update('realDensity', l => Math.round(10000 * listAverage(l)) / 10000)
     }
 
 
