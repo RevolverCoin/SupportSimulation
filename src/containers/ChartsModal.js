@@ -27,7 +27,11 @@ function mapChartStateToProps(state) {
     const authorsRewardRaw = state.getIn(['statistics', 'processed', iteration, 'avgAuthorsRewardList'])
     const supportersReward = state.getIn(['statistics', 'processed', iteration, 'avgSupportersRewardList'])
     const generatorsReward = state.getIn(['statistics', 'processed', iteration, 'avgGeneratorsRewardList'])
+    const authorsDegreeRaw = state.getIn(['statistics', 'processed', iteration, 'authorNodesDegree'])
+    const authorRewardDistr = state.getIn(['statistics', 'processed', iteration, 'authorRewardDistr'])
 
+
+    console.log(authorRewardDistr.toJS())
 
     const maxSupportCount = Math.max(
         authorsRewardRaw.keySeq().sort().last() || 0,
@@ -44,6 +48,15 @@ function mapChartStateToProps(state) {
         ],
         authors:[
             prepareD3Data(maxSupportCount, authorsRewardRaw)
+        ],
+
+        authorDegrees : [
+            prepareD3Data(maxSupportCount, authorsDegreeRaw)
+        ],
+
+
+        authorRewardDistr : [
+            prepareD3Data(authorRewardDistr.size, authorRewardDistr)
         ]
     }
 
@@ -96,6 +109,7 @@ class ChartsModal extends Component {
                         <li>authors reward : {100*currentIteration.get('authorsReward')}%</li>
                         <li>supporters reward : {100*currentIteration.get('supportersReward')}%</li>
                         <li>generators reward : {100*currentIteration.get('generatorsReward')}%</li>
+                        <li>activity : {currentIteration.get('supToGenActivity')}%</li>
 
                     </ul>
                 </div>
