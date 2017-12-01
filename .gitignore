@@ -88,3 +88,7 @@ crashlytics.properties
 crashlytics-build.properties
 fabric.properties
 
+
+# distribution
+dist
+build
