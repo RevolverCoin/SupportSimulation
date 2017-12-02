@@ -10,12 +10,12 @@ import {Range} from 'immutable'
 import {setChartsModalOpen, setChartsPopupIteration} from '../actions/actions'
 import RewardChart from '../components/RewardChart'
 
-function prepareD3Data(maxSupportCount, reward) {
+function prepareD3Data(maxSupportCount, reward, multiplier = 1) {
     //create range object to iterate over the reward data to be sure output arrays all have equal number of points
     const range = Range(0, maxSupportCount + 1)
     return {
         name:"reward",
-        values:reward.keySeq().sort().map(key => ([key, reward.get(key) || 0])).toJS()
+        values:reward.keySeq().sort().map(key => ([key, reward.get(key)  * multiplier|| 0])).toJS()
     }
 
 }
@@ -41,13 +41,13 @@ function mapChartStateToProps(state) {
     return {
         isOpen: state.get('isChartsModalOpen'),
         generators: [
-            prepareD3Data(maxSupportCount, generatorsReward)
+            prepareD3Data(maxSupportCount, generatorsReward, 100)
         ],
         supporters: [
-            prepareD3Data(maxSupportCount, supportersReward),
+            prepareD3Data(maxSupportCount, supportersReward, 100),
         ],
         authors:[
-            prepareD3Data(maxSupportCount, authorsRewardRaw)
+            prepareD3Data(maxSupportCount, authorsRewardRaw, 100)
         ],
 
         authorDegrees : [
