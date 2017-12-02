@@ -28,7 +28,7 @@ export default (state = INITIAL_STATE, action) => {
             return core.generatePOSBlock(state, action.data.count, 10, action.data.nodeId, action.data.supporterFee, action.data.authorFee)
 
         case actions.ESTABLISH_SUPPORT :
-            return core.establishSupport(state, action.data.nodes, action.data.sMin, action.data.sMax, action.data.tMin, action.data.tMax)
+            return core.establishSupport(state, action.data.nodes, action.data.sMin, action.data.sMax, action.data.tMin, action.data.tMax, action.data.avgSupport)
 
         case actions.CREATE_SIMULATION:
             return core.createSimulation(state, action.data)
