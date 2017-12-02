@@ -6,6 +6,9 @@ import * as NodeType from "../constants/NodeType";
 import {dumpCSV, postProcess} from '../core/statistics'
 import {clearAdjMatrixMemoizeCache} from '../core/rewardDistribution'
 
+import {beep} from '../core/utils'
+
+
 export function createAuthor(count) {
     return {
         type: types.CREATE_AUTHOR,
