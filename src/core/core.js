@@ -239,31 +239,31 @@ export function updateStructure(state) {
  * @param sMin minimum number of supports per node
  * @param sMax maximum number of supports per node
  */
-export function establishSupport(state, nodes, sMin, sMax, tMin, tMax) {
+export function establishSupport(state, nodes, sMin, sMax, tMin, tMax, avgSupport) {
     const allAuthors = getAuthors(state).map(a=>a.get('id')).toSet()
 
     //returns random author node id based on probability table
     const getRandomAuthor = (table) => table.get( Math.floor(Math.random()*table.size))
     return state.update('edges', edges => {
         let result = edges;
-
-        nodes.forEach(node => {
+        let nodeCount = nodes.size
+        nodes.forEach((node, index) => {
             //set of authors that were supported by current node
             let supportedAuthors = Set()
             const supportCount = getRandomInt(sMin, Math.min(sMax, allAuthors.size + 1));
-            result = result.concat(Repeat(0, supportCount).map(() => {
+            result =  result.concat(Repeat(0, supportCount).map(() => {
                     const table = allAuthors.subtract(supportedAuthors)
                     let authorId = table.size === 1 ? table.toList().first() : getRandomAuthor(table.toList());
                     supportedAuthors = supportedAuthors.add(authorId)
                     const nodeId = `${node.get('id')}_${authorId}`
                     return Map({
-                        id: nodeId,
-                        arrows: {to: {enabled: false}},
+                        id: nodeCount++,
+                      //  arrows: {to: {enabled: false}},
                         source: node.get('id'),
                         target: authorId,
-                        width: 3,
-                        label: "supports",
-                        age: getRandomInt(tMin, tMax)
+                      //  width: 3,
+                     //   label: "supports",
+                       // age: getRandomInt(tMin, tMax)
                     })
                 })
             )
@@ -367,7 +367,6 @@ export function generateBlocks(state, nodes, supporterFee, authorFee) {
     const matrix = createAdjacencyMatrix(state.get("edges"))
     const getNodeFee =createGetNodeFeeFunc(state.get('nodes'), supporterFee, authorFee)
     return nodes.reduce( (acc, next)=>{
-
         const block = Map({finderId : next.get('id'), subsidy : 10, blockReward: 10})
         acc = acc
           .update(['sim', 'totalReward'], val => val + block.get('blockReward'))
