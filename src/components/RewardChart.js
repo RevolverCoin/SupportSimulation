@@ -1,86 +1,97 @@
 'use strict'
 
-import React from 'react'
-import {AreaChart, BarChart} from 'rd3'
+import React,{Component} from 'react'
+import { Chart } from 'react-google-charts';
+const {clipboard, nativeImage} =  window.require("electron")
+
+const D3ChartComponent = (props) => props.data && props.data[0].values.length <= 2 ? <BarChart {...props} />: <AreaChart {...props}/>
 
 
-const ChartComponent = (props) => props.data && props.data[0].values.length <= 2 ? <BarChart {...props} />: <AreaChart {...props}/>
-const RewardChart = ({generators, supporters, authors}) => {
-    const commonMultiplier = 100
+class ChartComponent extends Component {
+    constructor(props) {
+        super(props);
+        this.makeSnapshot = this.makeSnapshot.bind(this)
+    }
+    makeSnapshot(){
+         const image = nativeImage.createFromDataURL(this._chart.chart.getImageURI())
+         clipboard.writeImage(image)
+    }
+
+    render(){
+        const {props}  = this
+        return (
+            <div>
+                <Chart
+                     {...props}
+                     ref={ref=>this._chart = ref}
+                     chartType="LineChart"
+                     columns = {[{"label":"time","type":"number","p":{}},{"label":"Reward","type":"number"}]} 
+                     width="600px"
+                     height="400px"
+                     legend_toggle
+                />
+                 
+                <button onClick={this.makeSnapshot}>
+                    copy
+                </button>
+             </div>
+         )
+    }
+}
+
+const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewardDistr}) => {
+    const options = ({htitle, vtitle}) => ({
+        legend: 'none', lineWidth: 3, chartArea: { left: 100, width: '80%', height: '80%' },
+        hAxis: {
+            titleTextStyle: { italic: false, fontSize: 17 },
+            textStyle: { fontSize: '17' }, title:htitle
+        },
+        vAxis: {
+            titleTextStyle: { italic: false, fontSize: 17 },
+            title: vtitle, format: '#.####', textStyle: { fontSize: '17' },
+        }
+    })
+
     return (
         <div className="charts">
-            <div>
                 <ChartComponent
-                    grouped={true}
-                    data={generators}
-                    width={"100%"}
-                    height={400}
-                    title="Generators"
-                    viewBoxObject={{
-                        x: 0,
-                        y: 0,
-                        height: 400,
-                        width: 500
-                    }}
-                    xAxisTickInterval={{unit: 'supports', interval: 5}}
-                    xAxisLabel="Support count"
-                    yAxisLabel="Reward"
-                    xAccessor={(d) => {
-                        return d[0];
-                    }
-                    }
-                    yAccessor={(d) => d[1] * commonMultiplier}
-
+                    rows = {generators[0].values}
+                    options = {options({htitle:'R node degree', vtitle:'% of reward'})}
+                    graph_id="generators"
                 />
-            </div>
 
-            <div>
                 <ChartComponent
-                    data={supporters}
-                    title="supporters"
-                    width={"100%"}
-                    height={400}
-                    viewBoxObject={{
-                        x: 0,
-                        y: 0,
-                        height: 400,
-                        width: 600
-                    }}
-                    xAxisTickInterval={{unit: 'supports', interval: 15}}
-                    xAxisLabel="Support count"
-                    yAxisLabel="Reward"
-                    xAccessor={(d) => {
-                        return d[0];
-                    }
-                    }
-                    yAccessor={(d) => d[1] * commonMultiplier}
-
+                    rows = {supporters[0].values}
+                    options = {options({htitle:'S node degree', vtitle:'% of reward'})}
+                    graph_id="supporters"
                 />
-            </div>
 
-            <div>
+
                 <ChartComponent
-                    data={authors}
-                    title="authors"
-                    width={"100%"}
-                    height={400}
-                    viewBoxObject={{
-                        x: 0,
-                        y: 0,
-                        height: 400,
-                        width: 600
-                    }}
-                    xAxisTickInterval={{unit: 'supports', interval: 25}}
-                    xAxisLabel="Support count"
-                    yAxisLabel="Reward"
-                    xAccessor={(d) => {
-                        return d[0];
-                    }
-                    }
-                    yAccessor={(d) => d[1] * commonMultiplier}
-
+                    rows = {authors[0].values}
+                    options = {options({htitle:'A node degree', vtitle:'% of reward'})}
+                    graph_id="authors"
                 />
-            </div>
+                <Chart
+                    chartType="ColumnChart"
+                    data={[["Number of nodes","Number of nodes",{"role":"annotation"}]].concat(authorDegrees[0].values.map(v=>[v[0].toString(),v[1],""]))}
+                    options = {options({htitle:'Number of supports', vtitle:'Number of nodes'})}
+                    width="600px"
+                    height="400px"
+                    graph_id="authorDegrees"
+                    legend_toggle
+                />
+
+                <Chart
+                    chartType="ColumnChart"
+                    data={[["Number of nodes","Number of nodes",{"role":"annotation"}]].concat(authorRewardDistr[0].values.map(v=>[v[0].toString(),v[1],""]))}
+                    options = {options({htitle:'Reward', vtitle:'Number of nodes'})}
+                    width="600px"
+                    height="400px"
+                    graph_id="authorRewardDistr"
+                    legend_toggle
+                />
+
         </div>
     )
 }
