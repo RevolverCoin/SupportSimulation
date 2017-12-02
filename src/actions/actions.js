@@ -106,7 +106,7 @@ export function createSimulation({
                                      authorFee,
                                      sampleSize = 1,
                                      useCurrentNetwork = false,
-                                     downloadCSV = false
+                                     downloadCSV =false
                                  },) {
     return (dispatch, getState) => {
         console.time("create_simulation");
@@ -129,11 +129,12 @@ export function createSimulation({
                     if (!useCurrentNetwork) {
                         // console.log(`Starting round ${round} mag:${mag}, dens:${dens}, sample : ${currentSample}`)
 
+                   
                         dispatch(createGenerator(genCount))
                         dispatch(createAuthor(authCount))
                         dispatch(createSupporter(supCount))
-
-
+                    
+                        console.log('created nodes')
                         dispatch(updateAuthorsSupportProb())
                         const genSMax = 2 * avgGenSupport - 1;
                         const supSMax = 2 * avgSupSupport - 1;
@@ -141,11 +142,12 @@ export function createSimulation({
                         const genDelta = genSMax > authCount ? genSMax - authCount : 0
                         const supDelta = supSMax > authCount ? supSMax - authCount : 0
 
+                        console.log('start creating supports')
 
-                        dispatch(establishSupportFromGenerators({sMin: 1 + genDelta, sMax: genSMax - genDelta}))
-                        dispatch(establishSupportFromSupporters({sMin: 1 + supDelta, sMax: supSMax - supDelta}))
+                        dispatch(establishSupportFromGenerators({sMin: 1 + genDelta, sMax: genSMax - genDelta, avgSupport : avgGenSupport}))
+                        dispatch(establishSupportFromSupporters({sMin: 1 + supDelta, sMax: supSMax - supDelta, avgSupport : avgSupSupport}))
                     }
-
+                    console.log ('graph created. begin reward distribution')
                     console.time("simulation");
                     const generators = getNodeOfType(getState(), NodeType.GENERATOR)
                     dispatch(generateBlocks(generators, supporterFee, authorFee))
@@ -165,6 +167,7 @@ export function createSimulation({
         })
 
         dispatch(computeStatistics())
+        beep();
         dispatch(updateStructure())
         if (downloadCSV) {
             const postProcessedData = postProcess(getState().getIn(['statistics', 'processed']))
@@ -184,10 +187,10 @@ export function createSimulation({
  * @param sMax maximum number of supports per node
  * @returns {{type, data: {nodes: *}}}
  */
-export function establishSupport(nodes, sMin, sMax, tMin, tMax) {
+export function establishSupport(nodes, sMin, sMax, tMin, tMax,avgSupport) {
     return {
         type: types.ESTABLISH_SUPPORT,
-        data: {nodes, sMin, sMax, tMin, tMax}
+        data: {nodes, sMin, sMax, tMin, tMax, avgSupport}
     }
 }
 
@@ -197,15 +200,15 @@ export function updateStructure() {
     }
 }
 
-export function establishSupportFromGenerators({sMin = 1, sMax = 8}) {
+export function establishSupportFromGenerators({sMin = 1, sMax = 8, avgSupport}) {
     return (dispatch, getState) => {
-        dispatch(establishSupport(getGenerators(getState()), sMin, sMax, 1, 100))
+        dispatch(establishSupport(getGenerators(getState()), sMin, sMax, 1, 100,avgSupport))
     }
 }
 
-export function establishSupportFromSupporters({sMin = 1, sMax = 6}) {
+export function establishSupportFromSupporters({sMin = 1, sMax = 6,avgSupport}) {
     return (dispatch, getState) => {
-        dispatch(establishSupport(getSupporters(getState()), sMin, sMax, 1, 100))
+        dispatch(establishSupport(getSupporters(getState()), sMin, sMax, 1, 100,avgSupport))
     }
 }
 
