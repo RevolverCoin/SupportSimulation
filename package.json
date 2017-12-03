@@ -29,6 +29,7 @@
     "react": "^15.6.2",
     "react-dom": "^15.4.2",
     "react-dropdown": "^1.2.5",
+    "react-google-charts": "^1.5.5",
     "react-graph-vis": "^0.1.1",
     "react-modal": "^2.0.6",
     "react-redux": "^5.0.3",
