@@ -18,16 +18,14 @@ class ChartComponent extends Component {
     }
 
     render(){
-        const {props}  = this
+        const { props } = this
         return (
             <div>
                 <Chart
-                     {...props}
                      ref={ref=>this._chart = ref}
-                     chartType="LineChart"
-                     columns = {[{"label":"time","type":"number","p":{}},{"label":"Reward","type":"number"}]} 
                      width="600px"
                      height="400px"
+                     {...props}
                      legend_toggle
                 />
                  
@@ -58,12 +56,16 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                     rows = {generators[0].values}
                     options = {options({htitle:'R node degree', vtitle:'% of reward'})}
                     graph_id="generators"
+                    chartType="LineChart"
+                    columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
 
                 <ChartComponent
                     rows = {supporters[0].values}
                     options = {options({htitle:'S node degree', vtitle:'% of reward'})}
                     graph_id="supporters"
+                    chartType="LineChart"
+                    columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
 
 
@@ -71,23 +73,21 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                     rows = {authors[0].values}
                     options = {options({htitle:'A node degree', vtitle:'% of reward'})}
                     graph_id="authors"
+                    chartType="LineChart"
+                    columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
-                <Chart
+                <ChartComponent
                     chartType="ColumnChart"
                     data={[["Number of nodes","Number of nodes",{"role":"annotation"}]].concat(authorDegrees[0].values.map(v=>[v[0].toString(),v[1],""]))}
                     options = {options({htitle:'Number of supports', vtitle:'Number of nodes'})}
-                    width="600px"
-                    height="400px"
                     graph_id="authorDegrees"
                     legend_toggle
                 />
 
-                <Chart
+                <ChartComponent
                     chartType="ColumnChart"
                     data={[["Number of nodes","Number of nodes",{"role":"annotation"}]].concat(authorRewardDistr[0].values.map(v=>[v[0].toString(),v[1],""]))}
                     options = {options({htitle:'Reward', vtitle:'Number of nodes'})}
-                    width="600px"
-                    height="400px"
                     graph_id="authorRewardDistr"
                     legend_toggle
                 />
