@@ -38,7 +38,17 @@ class ChartComponent extends Component {
 }
 
 const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewardDistr}) => {
-    const options = ({htitle, vtitle}) => ({
+    const options = ({ htitle, vtitle }) => ({
+        
+        trendlines:{ 0: {
+            color: 'purple',
+            lineWidth: 2,
+            opacity: 0.2,
+            type: 'polynomial',
+            degree: 3,
+            lineDashStyle:[5,5]
+          } },
+
         legend: 'none', lineWidth: 3, chartArea: { left: 100, width: '80%', height: '80%' },
         hAxis: {
             titleTextStyle: { italic: false, fontSize: 17 },
@@ -74,7 +84,8 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                     rows = {authors[0].values}
                     options = {options({htitle:'A node degree', vtitle:'% of reward'})}
                     graph_id="authors"
-                    chartType="LineChart"
+                chartType="LineChart"
+                
                     columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
                 <ChartComponent
