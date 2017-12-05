@@ -46,7 +46,6 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
             opacity: 0.2,
             type: 'polynomial',
             degree: 3,
-            lineDashStyle:[5,5]
           } },
 
         legend: 'none', lineWidth: 3, chartArea: { left: 100, width: '80%', height: '80%' },
