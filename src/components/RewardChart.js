@@ -45,6 +45,7 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
             textStyle: { fontSize: '17' }, title:htitle
         },
         vAxis: {
+            minValue: 0,
             titleTextStyle: { italic: false, fontSize: 17 },
             title: vtitle, format: '#.####', textStyle: { fontSize: '17' },
         }
