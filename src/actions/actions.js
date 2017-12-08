@@ -243,6 +243,20 @@ export function setCreateSimulationModalOpen(value) {
     }
 }
 
+export function setChartsDataModalOpen(value) {
+    return {
+        type: types.SET_CHARTS_DATA_POPUP_OPEN,
+        data: value
+    }
+}
+
+export function setStatisticsChartData(chartId, data) {
+    return {
+        type: types.SET_STATISTICS_CHART_DATA,
+        data: {chartId, data}
+    }
+}
+
 export function setChartsModalOpen(value) {
     return {
         type: types.SET_CHARTS_POPUP_OPEN,

@@ -8,6 +8,7 @@ import "./App.css";
 import Graph from "./containers/graphVIS";
 import StartSimulationModal from "./containers/StartSimulationModal";
 import ChartsModal from "./containers/ChartsModal";
+import ChartsDataModal from "./containers/ChartsDataModal";
 import configureStore from "./core/store";
 
 
@@ -178,6 +179,7 @@ class App extends Component {
 
                         <StartSimulationModal/>
                         <ChartsModal/>
+                        <ChartsDataModal/>
 
                     </div>
 

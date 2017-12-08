@@ -19,6 +19,7 @@ class ChartComponent extends Component {
 
     render(){
         const { props } = this
+        const {showData, rows, data, graph_id} = props
         return (
             <div>
                 <Chart
@@ -32,12 +33,16 @@ class ChartComponent extends Component {
                 <button onClick={this.makeSnapshot}>
                     copy
                 </button>
+
+                <button onClick={()=>showData && showData(graph_id, rows || data)}>
+                    data
+                </button>
              </div>
          )
     }
 }
 
-const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewardDistr}) => {
+const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewardDistr, showData}) => {
     const options = ({ htitle, vtitle }) => ({
         
         trendlines:{ 0: {
@@ -67,6 +72,7 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                     options = {options({htitle:'R node degree', vtitle:'% of reward'})}
                     graph_id="generators"
                     chartType="LineChart"
+                    showData={showData}
                     columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
 
@@ -75,6 +81,7 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                     options = {options({htitle:'S node degree', vtitle:'% of reward'})}
                     graph_id="supporters"
                     chartType="LineChart"
+                    showData={showData}
                     columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
 
@@ -83,8 +90,8 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                     rows = {authors[0].values}
                     options = {options({htitle:'A node degree', vtitle:'% of reward'})}
                     graph_id="authors"
-                chartType="LineChart"
-                
+                    chartType="LineChart"
+                    showData={showData}
                     columns={[{ "label": "time", "type": "number", "p": {} }, { "label": "Reward", "type": "number" }]} 
                 />
                 <ChartComponent

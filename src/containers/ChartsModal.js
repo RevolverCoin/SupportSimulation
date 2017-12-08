@@ -7,7 +7,7 @@ import {connect} from 'react-redux';
 import {Range} from 'immutable'
 
 
-import {setChartsModalOpen, setChartsPopupIteration} from '../actions/actions'
+import {setChartsModalOpen, setChartsPopupIteration, setChartsDataModalOpen, setStatisticsChartData} from '../actions/actions'
 import RewardChart from '../components/RewardChart'
 
 function prepareD3Data(maxSupportCount, reward, multiplier = 1) {
@@ -21,6 +21,10 @@ function prepareD3Data(maxSupportCount, reward, multiplier = 1) {
 }
 
 
+function createDataArray(existingData, maxSupportCount, reward, multiplier = 1) {
+    return existingData ? {name:'reward', values : existingData} : prepareD3Data(maxSupportCount, reward, multiplier)
+}
+
 
 function mapChartStateToProps(state) {
     const iteration = state.get('chartsModalIteration') || 0;
@@ -30,18 +34,16 @@ function mapChartStateToProps(state) {
     const authorsDegreeRaw = state.getIn(['statistics', 'processed', iteration, 'authorNodesDegree'])
     const authorRewardDistr = state.getIn(['statistics', 'processed', iteration, 'authorRewardDistr'])
 
-
-    console.log(authorRewardDistr.toJS())
+    const generatorsChart = state.getIn(['charts','generators'])
 
     const maxSupportCount = Math.max(
         authorsRewardRaw.keySeq().sort().last() || 0,
         supportersReward.keySeq().sort().last() || 0)
 
-
     return {
-        isOpen: state.get('isChartsModalOpen'),
-        generators: [
-            prepareD3Data(maxSupportCount, generatorsReward, 100)
+        isOpen: !!state.get('isChartsModalOpen'),
+        generators:  [
+            createDataArray(generatorsChart, maxSupportCount, generatorsReward, 100)
         ],
         supporters: [
             prepareD3Data(maxSupportCount, supportersReward, 100),
@@ -62,7 +64,16 @@ function mapChartStateToProps(state) {
 
 }
 
-const RewardChartContainer = connect(mapChartStateToProps)(RewardChart)
+function mapChartDispatchToProps(dispatch) {
+    return {
+        showData(chartId, data) {
+            dispatch(setChartsDataModalOpen(chartId))
+            dispatch(setStatisticsChartData(chartId, data))
+        }
+    }
+}
+
+const RewardChartContainer = connect(mapChartStateToProps, mapChartDispatchToProps)(RewardChart)
 
 
 class ChartsModal extends Component {

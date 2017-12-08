@@ -54,11 +54,17 @@ export default (state = INITIAL_STATE, action) => {
         case actions.SET_CREATE_SIMULATION_POPUP_OPEN:
             return state.set('isCreateSimulationModalOpen', action.data)
 
+        case actions.SET_CHARTS_DATA_POPUP_OPEN:
+            return state.set('isChartsDataModalOpen', action.data)
+
         case actions.SET_CHARTS_POPUP_OPEN:
             return state.set('isChartsModalOpen', action.data)
 
         case actions.SET_CHARTS_POPUP_ITERATION:
             return state.set('chartsModalIteration', action.data)
+
+        case actions.SET_STATISTICS_CHART_DATA:
+            return state.setIn(['charts',action.data.chartId], action.data.data)    
 
         default:
             return state;
