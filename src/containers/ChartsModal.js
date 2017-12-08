@@ -35,6 +35,8 @@ function mapChartStateToProps(state) {
     const authorRewardDistr = state.getIn(['statistics', 'processed', iteration, 'authorRewardDistr'])
 
     const generatorsChart = state.getIn(['charts','generators'])
+    const supportersChart = state.getIn(['charts','supporters'])
+    const authorsChart = state.getIn(['charts','authors'])
 
     const maxSupportCount = Math.max(
         authorsRewardRaw.keySeq().sort().last() || 0,
@@ -46,10 +48,10 @@ function mapChartStateToProps(state) {
             createDataArray(generatorsChart, maxSupportCount, generatorsReward, 100)
         ],
         supporters: [
-            prepareD3Data(maxSupportCount, supportersReward, 100),
+            createDataArray(supportersChart,maxSupportCount, supportersReward, 100),
         ],
         authors:[
-            prepareD3Data(maxSupportCount, authorsRewardRaw, 100)
+            createDataArray(authorsChart,maxSupportCount, authorsRewardRaw, 100)
         ],
 
         authorDegrees : [
