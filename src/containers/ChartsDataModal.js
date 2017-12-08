@@ -41,7 +41,7 @@ class ChartsDataModal extends Component {
                 isOpen={isOpen}
                 contentLabel="Modal"
                 className={{
-                    base: 'start-simulation-modal'
+                    base: 'charts-data-modal'
                 }}
             >
                 <h2>{`Chart data for ${chartId}`}</h2>

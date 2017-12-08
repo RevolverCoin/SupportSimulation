@@ -77,6 +77,21 @@ h3 {
   margin-bottom : 200px;
 }
 
+
+.charts-data-modal{
+  width: 450px;
+  height: 550px;
+  background-color: white;
+  margin: 20px auto;
+  padding: 30px;
+  overflow: scroll;
+}
+
+.charts-data-modal textarea{
+  width : 100%;
+  height : 400px;
+}
+
 .italic{
   font-style: italic;
 }
