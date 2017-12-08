@@ -40,6 +40,7 @@ class ChartsDataModal extends Component {
             <Modal
                 isOpen={isOpen}
                 contentLabel="Modal"
+                style={{ overlay: { zIndex: 999 } }}
                 className={{
                     base: 'charts-data-modal'
                 }}
