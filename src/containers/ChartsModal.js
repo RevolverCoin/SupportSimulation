@@ -106,28 +106,30 @@ class ChartsModal extends Component {
                     base: 'charts-modal'
                 }}
             >
-                <h2>Simulation results</h2>
-                <p>Select iteration</p>
-                <Dropdown options={iterations} value={iterationDesc} onChange={setChartsPopupIteration}
-                          placeholder="Select iteration"/>
-                <div>
-                    <ul>
-                        <li>n : {currentIteration.get('mag')}</li>
-                        <li>γ1(pGen) : {pGen}</li>
-                        <li>γ2(pAuth) : {pAuth}</li>
-                        <li>γ3(pSup) : {pSup}</li>
+                <div>    
+                    <h2>Simulation results</h2>
+                    <p>Select iteration</p>
+                    <Dropdown options={iterations} value={iterationDesc} onChange={setChartsPopupIteration}
+                            placeholder="Select iteration"/>
+                    <div>
+                        <ul>
+                            <li>n : {currentIteration.get('mag')}</li>
+                            <li>γ1(pGen) : {pGen}</li>
+                            <li>γ2(pAuth) : {pAuth}</li>
+                            <li>γ3(pSup) : {pSup}</li>
 
-                        <li>Real avg density : {currentIteration.get('realDensity')}</li>
+                            <li>Real avg density : {currentIteration.get('realDensity')}</li>
 
-                        <li>authors reward : {100*currentIteration.get('authorsReward')}%</li>
-                        <li>supporters reward : {100*currentIteration.get('supportersReward')}%</li>
-                        <li>generators reward : {100*currentIteration.get('generatorsReward')}%</li>
-                        <li>activity : {currentIteration.get('supToGenActivity')}%</li>
+                            <li>authors reward : {100*currentIteration.get('authorsReward')}%</li>
+                            <li>supporters reward : {100*currentIteration.get('supportersReward')}%</li>
+                            <li>generators reward : {100*currentIteration.get('generatorsReward')}%</li>
+                            <li>activity : {currentIteration.get('supToGenActivity')}%</li>
 
-                    </ul>
-                </div>
-                <RewardChartContainer/>
-                <button onClick={onCancel}>OK</button>
+                        </ul>
+                    </div>
+                    <RewardChartContainer/>
+                    <button onClick={onCancel}>OK</button>
+                </div>    
             </Modal>
         )
     }

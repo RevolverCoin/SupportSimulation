@@ -65,13 +65,17 @@ h3 {
 }
 
 .charts-modal{
-  width: 1500px;
   height: 100%;
   background-color: white;
   margin: 20px auto;
   padding: 30px;
   overflow: scroll;
   z-index: 998;
+}
+
+.charts-modal > div {
+  width: 1500px;
+
 }
 
 .charts-modal button{
