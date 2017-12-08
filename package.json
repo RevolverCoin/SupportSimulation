@@ -12,7 +12,8 @@
     "electron": "^1.7.9",
     "electron-builder": "^19.47.1",
     "mocha": "^3.2.0",
-    "react-scripts": "0.7.0"
+    "react-scripts": "0.7.0",
+    "remote-redux-devtools": "^0.5.12"
   },
   "dependencies": {
     "d3": "^3.5.17",
