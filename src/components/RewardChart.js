@@ -43,7 +43,7 @@ class ChartComponent extends Component {
 }
 
 const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewardDistr, showData}) => {
-    const options = ({ htitle, vtitle }) => ({
+    const options = ({ htitle, vtitle, custom }) => ({
         
         trendlines:{ 0: {
             color: 'purple',
@@ -62,7 +62,9 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
             minValue: 0,
             titleTextStyle: { italic: false, fontSize: 17 },
             title: vtitle, format: '#.####', textStyle: { fontSize: '17' },
-        }
+        },
+        
+        ...custom
     })
 
     return (
