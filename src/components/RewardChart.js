@@ -53,7 +53,9 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
             degree: 3,
           } },
 
-        legend: 'none', lineWidth: 3, chartArea: { left: 100, width: '80%', height: '80%' },
+        legend: 'none',
+        lineWidth: 3,
+        chartArea: { left: 100, width: '80%', height: '80%' },
         hAxis: {
             titleTextStyle: { italic: false, fontSize: 17 },
             textStyle: { fontSize: '17' }, title:htitle
@@ -63,7 +65,7 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
             titleTextStyle: { italic: false, fontSize: 17 },
             title: vtitle, format: '#.####', textStyle: { fontSize: '17' },
         },
-        
+
         ...custom
     })
 
@@ -99,7 +101,19 @@ const RewardChart = ({generators, supporters, authors, authorDegrees, authorRewa
                 <ChartComponent
                     chartType="ColumnChart"
                     data={[["Number of nodes","Number of nodes",{"role":"annotation"}]].concat(authorDegrees[0].values.map(v=>[v[0].toString(),v[1],""]))}
-                    options = {options({htitle:'Number of supports', vtitle:'Number of nodes'})}
+                    options={options({
+                        htitle: 'Number of supports', vtitle: 'Number of nodes',
+                        custom: {
+                           
+                            hAxis: {
+                                titleTextStyle: { italic: 
+                                    false, fontSize: 17 },
+                                textStyle: { fontSize: '12' }, title:"Node degree",
+                                ticks: [0, 10, 20]
+                            }
+                        }
+                    })}
+                    width="100%"
                     graph_id="authorDegrees"
                     legend_toggle
                 />
